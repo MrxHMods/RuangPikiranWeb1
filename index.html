@@ -224,7 +224,6 @@
             justify-content: center;
             gap: 8px;
             border: none;
-            margin-bottom: 8px;
             transition: all 0.2s;
         }
 
@@ -234,32 +233,21 @@
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
 
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+        }
+
         .btn-secondary {
             background: var(--bg);
             color: var(--text);
             border: 2px solid var(--border);
         }
 
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--border);
-            color: var(--text);
-            padding: 8px 16px;
-            border-radius: 30px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-outline:hover {
-            border-color: #6366f1;
-            color: #6366f1;
-        }
-
         .divider {
             display: flex;
             align-items: center;
-            margin: 24px 0;
+            margin: 24px 0 16px;
             color: var(--text-secondary);
             font-size: 0.9rem;
         }
@@ -574,6 +562,11 @@
             gap: 8px;
         }
 
+        .btn-primary-lg:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+        }
+
         .danger-box {
             background: var(--danger-light);
             padding: 16px;
@@ -760,13 +753,14 @@
 
         .offline-banner.show { display: block; }
 
-        .modal {
+        .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -776,22 +770,72 @@
             transition: all 0.3s ease;
         }
 
-        .modal.show {
+        .modal-overlay.show {
             visibility: visible;
             opacity: 1;
         }
 
-        .modal-content {
+        .modal-container {
             background: var(--card-bg);
-            border-radius: 24px;
+            border-radius: 28px;
             padding: 28px;
             width: 90%;
-            max-width: 400px;
+            max-width: 420px;
             border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
         }
 
-        .modal-content h3 {
+        .modal-overlay.show .modal-container {
+            transform: scale(1);
+        }
+
+        .modal-container h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
             margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .modal-save {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+        }
+
+        .modal-cancel {
+            background: var(--bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+
+        .hidden { display: none !important; }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
         }
 
         @media (max-width: 768px) {
@@ -802,7 +846,6 @@
             .tab-btn { font-size: 0.75rem; padding: 8px 10px; }
             .tab-btn span { display: none; }
         }
-        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -817,17 +860,33 @@
         <div class="theme-tooltip" id="themeTooltip">🌙 Mode Gelap</div>
     </div>
 
-    <!-- Modal Edit Nama -->
-    <div id="editNameModal" class="modal">
-        <div class="modal-content">
+    <!-- MODAL POPUP EDIT NAMA -->
+    <div id="editNameModal" class="modal-overlay">
+        <div class="modal-container">
             <h3><i class="fas fa-user-edit"></i> Edit Nama</h3>
             <div class="form-group">
                 <label>Nama Panggilan</label>
-                <input type="text" id="editNameInput" class="form-input" placeholder="Masukkan nama Anda">
+                <input type="text" id="editNameInput" class="form-input" placeholder="Masukkan nama Anda" autocomplete="off">
             </div>
-            <div style="display: flex; gap: 12px; margin-top: 20px;">
-                <button id="saveNameBtn" class="btn-primary" style="flex:1;">Simpan</button>
-                <button id="cancelNameBtn" class="btn-secondary" style="flex:1;">Batal</button>
+            <div class="modal-buttons">
+                <button id="saveNameBtn" class="modal-save"><i class="fas fa-check"></i> Simpan</button>
+                <button id="cancelNameBtn" class="modal-cancel"><i class="fas fa-times"></i> Batal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL POPUP EDIT GENDER -->
+    <div id="editGenderModal" class="modal-overlay">
+        <div class="modal-container">
+            <h3><i class="fas fa-venus-mars"></i> Pilih Jenis Kelamin</h3>
+            <div class="gender-select" id="modalGenderSelect">
+                <div data-gender="Laki-laki" class="gender-option">👨 Laki-laki</div>
+                <div data-gender="Perempuan" class="gender-option">👩 Perempuan</div>
+                <div data-gender="Tidak ingin disebut" class="gender-option">🤐 Tidak ingin disebut</div>
+            </div>
+            <div class="modal-buttons">
+                <button id="saveGenderBtn" class="modal-save"><i class="fas fa-check"></i> Simpan</button>
+                <button id="cancelGenderBtn" class="modal-cancel"><i class="fas fa-times"></i> Batal</button>
             </div>
         </div>
     </div>
@@ -853,8 +912,6 @@
                 <button id="registerBtn" class="btn btn-primary"><i class="fas fa-user-plus"></i> Daftar</button>
                 <p class="toggle-link">Sudah punya akun? <a id="showLogin">Masuk</a></p>
             </div>
-            <div class="divider"><span>atau</span></div>
-            <button id="anonymousBtn" class="btn btn-secondary"><i class="fas fa-user-secret"></i> Lanjutkan Tanpa Akun</button>
         </div>
     </div>
 
@@ -890,11 +947,8 @@
                         <p id="profileDisplayName">-</p>
                     </div>
                     <div class="profile-field">
-                        <label>Jenis Kelamin</label>
-                        <div class="gender-select" id="genderSelect">
-                            <div data-gender="Laki-laki" class="gender-option">👨 Laki-laki</div>
-                            <div data-gender="Perempuan" class="gender-option">👩 Perempuan</div>
-                        </div>
+                        <label>Jenis Kelamin <i class="fas fa-edit edit-icon" id="editGenderIcon" style="cursor:pointer; color:var(--primary);"></i></label>
+                        <p id="profileGenderDisplay">-</p>
                     </div>
                     <div class="profile-field"><label>Email / Akun</label><p id="profileEmail">-</p></div>
                     <div class="profile-field"><label>Tipe Akun</label><p id="profileType">-</p></div>
@@ -904,13 +958,13 @@
                     <button id="clearLocalCacheBtn" class="btn-sm" style="background:var(--danger);color:white;border:none;margin-top:12px;"><i class="fas fa-trash-alt"></i> Hapus Cache Lokal</button>
                 </div>
             </div>
-            <footer>Data tersimpan aman & tersinkronisasi</footer>
+            <footer>Data tersimpan aman & tersinkronasi</footer>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
         import { getFirestore, enableIndexedDbPersistence, collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyCJ532nHpPtBunCTM32JuCOY1uUN8tliK4", authDomain: "ruang-pikiran.firebaseapp.com", projectId: "ruang-pikiran", storageBucket: "ruang-pikiran.firebasestorage.app", messagingSenderId: "451081065318", appId: "1:451081065318:web:cce97c553e2d6219eb2ea7" };
@@ -919,6 +973,7 @@
         const db = getFirestore(app);
         enableIndexedDbPersistence(db).catch(() => console.log("offline mode enabled"));
 
+        // Theme
         const html = document.documentElement;
         const themeToggle = document.getElementById('themeToggle');
         const themeTooltip = document.getElementById('themeTooltip');
@@ -927,7 +982,7 @@
             if (html.classList.contains('dark')) { html.classList.remove('dark'); localStorage.setItem('ruangPikiran_theme', 'light'); themeTooltip.textContent = '🌙 Mode Gelap'; } 
             else { html.classList.add('dark'); localStorage.setItem('ruangPikiran_theme', 'dark'); themeTooltip.textContent = '☀️ Mode Terang'; }
             document.querySelector('meta[name="theme-color"]').content = html.classList.contains('dark') ? '#1e293b' : '#6366f1';
-            if (!$('analyticsPanel').classList.contains('hidden')) renderAnalytics();
+            if (chart) renderAnalytics();
         });
 
         let currentUser = null, entries = [], chart = null, currentPeriod = 7, unsub = null;
@@ -947,9 +1002,10 @@
             if (docSnap.exists() && docSnap.data().profile) {
                 userProfile = docSnap.data().profile;
             } else {
-                userProfile = { displayName: currentUser.isAnonymous ? 'Pengguna Anonim' : currentUser.email?.split('@')[0] || 'Pengguna', gender: '' };
+                userProfile = { displayName: currentUser.email?.split('@')[0] || 'Pengguna', gender: '' };
                 await saveUserProfile();
             }
+            updateDisplayName();
             renderProfile();
         }
         
@@ -957,29 +1013,24 @@
             if (!currentUser) return;
             const profileRef = doc(db, 'users', currentUser.uid);
             await setDoc(profileRef, { profile: userProfile }, { merge: true });
-            if (!currentUser.isAnonymous && userProfile.displayName) {
+            if (userProfile.displayName) {
                 try { await updateProfile(currentUser, { displayName: userProfile.displayName }); } catch(e) {}
             }
         }
         
         function updateDisplayName() {
-            const display = userProfile.displayName || (currentUser?.isAnonymous ? 'Anonim' : currentUser?.email?.split('@')[0] || 'Pengguna');
+            const display = userProfile.displayName || currentUser?.email?.split('@')[0] || 'Pengguna';
             $('userDisplay').textContent = display;
             $('profileDisplayName').textContent = display;
         }
 
-        $('showRegister').onclick = () => { $('loginForm').style.display='none'; $('registerForm').style.display='block'; };
-        $('showLogin').onclick = () => { $('registerForm').style.display='none'; $('loginForm').style.display='block'; };
-        $('loginBtn').onclick = async () => { const e = $('loginEmail').value.trim(); const p = $('loginPassword').value; if (!e || !p) return showError('Isi email dan password'); try { await signInWithEmailAndPassword(auth, e, p); } catch (err) { showError(err.code === 'auth/invalid-credential' ? 'Email atau password salah' : err.message); } };
-        $('registerBtn').onclick = async () => { const e = $('registerEmail').value.trim(); const p = $('registerPassword').value; const c = $('registerConfirm').value; if (!e || !p) return showError('Isi semua field'); if (p !== c) return showError('Password tidak cocok'); if (p.length < 6) return showError('Minimal 6 karakter'); try { await createUserWithEmailAndPassword(auth, e, p); } catch (err) { showError(err.code === 'auth/email-already-in-use' ? 'Email sudah terdaftar' : err.message); } };
-        $('anonymousBtn').onclick = async () => { try { await signInAnonymously(auth); } catch (err) { showError('Gagal login anonim'); } };
-        $('logoutBtn').onclick = async () => { if (confirm('Keluar?')) { if (unsub) { unsub(); unsub = null; } await signOut(auth); } };
-        $('profileBtn').onclick = () => showTab('profile');
+        // Modal Logic
+        const editNameModal = $('editNameModal');
+        const editGenderModal = $('editGenderModal');
         
-        const modal = $('editNameModal');
         $('editNameIcon').onclick = () => {
             $('editNameInput').value = userProfile.displayName || '';
-            modal.classList.add('show');
+            editNameModal.classList.add('show');
         };
         $('saveNameBtn').onclick = async () => {
             const newName = $('editNameInput').value.trim();
@@ -989,23 +1040,47 @@
                 updateDisplayName();
                 renderProfile();
             }
-            modal.classList.remove('show');
+            editNameModal.classList.remove('show');
         };
-        $('cancelNameBtn').onclick = () => modal.classList.remove('show');
-        modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('show'); };
-
-        function setupGenderSelection() {
-            const genderOptions = document.querySelectorAll('.gender-option');
-            genderOptions.forEach(opt => {
-                opt.onclick = async () => {
-                    genderOptions.forEach(o => o.classList.remove('selected'));
-                    opt.classList.add('selected');
-                    userProfile.gender = opt.dataset.gender;
-                    await saveUserProfile();
-                    renderProfile();
-                };
+        $('cancelNameBtn').onclick = () => editNameModal.classList.remove('show');
+        
+        $('editGenderIcon').onclick = () => {
+            const modalGenders = document.querySelectorAll('#modalGenderSelect .gender-option');
+            modalGenders.forEach(opt => {
+                if (opt.dataset.gender === userProfile.gender) opt.classList.add('selected');
+                else opt.classList.remove('selected');
             });
-        }
+            editGenderModal.classList.add('show');
+        };
+        
+        document.querySelectorAll('#modalGenderSelect .gender-option').forEach(opt => {
+            opt.onclick = function() {
+                document.querySelectorAll('#modalGenderSelect .gender-option').forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+            };
+        });
+        
+        $('saveGenderBtn').onclick = async () => {
+            const selected = document.querySelector('#modalGenderSelect .gender-option.selected');
+            if (selected) {
+                userProfile.gender = selected.dataset.gender;
+                await saveUserProfile();
+                renderProfile();
+            }
+            editGenderModal.classList.remove('show');
+        };
+        $('cancelGenderBtn').onclick = () => editGenderModal.classList.remove('show');
+        
+        editNameModal.onclick = (e) => { if (e.target === editNameModal) editNameModal.classList.remove('show'); };
+        editGenderModal.onclick = (e) => { if (e.target === editGenderModal) editGenderModal.classList.remove('show'); };
+
+        // Auth Listeners
+        $('showRegister').onclick = () => { $('loginForm').style.display='none'; $('registerForm').style.display='block'; };
+        $('showLogin').onclick = () => { $('registerForm').style.display='none'; $('loginForm').style.display='block'; };
+        $('loginBtn').onclick = async () => { const e = $('loginEmail').value.trim(); const p = $('loginPassword').value; if (!e || !p) return showError('Isi email dan password'); try { await signInWithEmailAndPassword(auth, e, p); } catch (err) { showError(err.code === 'auth/invalid-credential' ? 'Email atau password salah' : err.message); } };
+        $('registerBtn').onclick = async () => { const e = $('registerEmail').value.trim(); const p = $('registerPassword').value; const c = $('registerConfirm').value; if (!e || !p) return showError('Isi semua field'); if (p !== c) return showError('Password tidak cocok'); if (p.length < 6) return showError('Minimal 6 karakter'); try { await createUserWithEmailAndPassword(auth, e, p); } catch (err) { showError(err.code === 'auth/email-already-in-use' ? 'Email sudah terdaftar' : err.message); } };
+        $('logoutBtn').onclick = async () => { if (confirm('Keluar?')) { if (unsub) { unsub(); unsub = null; } await signOut(auth); } };
+        $('profileBtn').onclick = () => showTab('profile');
 
         onAuthStateChanged(auth, async user => {
             if (user) {
@@ -1014,10 +1089,8 @@
                 $('mainApp').classList.add('show');
                 updateSync();
                 await loadUserProfile();
-                updateDisplayName();
                 loadData();
                 renderProfile();
-                setupGenderSelection();
             } else {
                 currentUser = null;
                 $('loginPage').style.display = 'flex';
@@ -1067,13 +1140,10 @@
         function renderProfile() {
             if(!currentUser) return;
             updateDisplayName();
-            const selectedGender = userProfile.gender;
-            document.querySelectorAll('.gender-option').forEach(opt => {
-                if (opt.dataset.gender === selectedGender) opt.classList.add('selected');
-                else opt.classList.remove('selected');
-            });
-            $('profileEmail').innerHTML = currentUser.isAnonymous ? 'Akun Anonim' : currentUser.email;
-            $('profileType').innerHTML = currentUser.isAnonymous ? '👤 Tamu (data tersimpan di perangkat)' : '🔐 Akun Teregistrasi (Cloud Sync)';
+            const genderText = userProfile.gender || 'Belum diisi';
+            $('profileGenderDisplay').textContent = genderText === 'Tidak ingin disebut' ? '🤐 Tidak ingin disebut' : (genderText === 'Laki-laki' ? '👨 Laki-laki' : (genderText === 'Perempuan' ? '👩 Perempuan' : 'Belum diisi'));
+            $('profileEmail').innerHTML = currentUser.email || 'Email tidak tersedia';
+            $('profileType').innerHTML = '🔐 Akun Teregistrasi (Cloud Sync)';
             const createdAt = currentUser.metadata?.creationTime ? new Date(currentUser.metadata.creationTime).toLocaleDateString('id-ID') : 'Baru saja';
             $('profileSince').innerHTML = createdAt;
             $('profileTotalEntries').innerHTML = `${entries.length} entri jurnal`;
@@ -1090,7 +1160,7 @@
             if (id === 'analytics') renderAnalytics();
             if (id === 'dashboard') renderDashboard();
             if (id === 'export') $('exportPreview').innerHTML = `<strong>📝 ${entries.length} jurnal siap diekspor.</strong>`;
-            if (id === 'profile') { renderProfile(); setupGenderSelection(); }
+            if (id === 'profile') { renderProfile(); }
         }
 
         document.querySelector('.nav-tabs').addEventListener('click', e => { const btn = e.target.closest('.tab-btn'); if (btn) showTab(btn.dataset.tab); });
