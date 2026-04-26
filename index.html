@@ -240,6 +240,22 @@
             border: 2px solid var(--border);
         }
 
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-outline:hover {
+            border-color: #6366f1;
+            color: #6366f1;
+        }
+
         .divider {
             display: flex;
             align-items: center;
@@ -698,6 +714,36 @@
             border-radius: 12px;
         }
 
+        .profile-field .edit-icon {
+            cursor: pointer;
+            margin-left: 8px;
+            font-size: 0.8rem;
+            color: var(--primary);
+        }
+
+        .gender-select {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .gender-option {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .gender-option.selected {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            border-color: #4f46e5;
+        }
+
         .offline-banner {
             position: fixed;
             top: 0;
@@ -713,6 +759,40 @@
         }
 
         .offline-banner.show { display: block; }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .modal.show {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 28px;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid var(--border);
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+        }
 
         @media (max-width: 768px) {
             .app-container { padding: 12px; }
@@ -735,6 +815,21 @@
             </div>
         </button>
         <div class="theme-tooltip" id="themeTooltip">🌙 Mode Gelap</div>
+    </div>
+
+    <!-- Modal Edit Nama -->
+    <div id="editNameModal" class="modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-user-edit"></i> Edit Nama</h3>
+            <div class="form-group">
+                <label>Nama Panggilan</label>
+                <input type="text" id="editNameInput" class="form-input" placeholder="Masukkan nama Anda">
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 20px;">
+                <button id="saveNameBtn" class="btn-primary" style="flex:1;">Simpan</button>
+                <button id="cancelNameBtn" class="btn-secondary" style="flex:1;">Batal</button>
+            </div>
+        </div>
     </div>
 
     <div id="loginPage" class="login-container">
@@ -786,7 +881,30 @@
             <div id="historyPanel" class="tab-panel hidden"><div class="card"><h2>📋 Riwayat Jurnal</h2><div style="display:flex;gap:8px;margin-bottom:12px;"><input type="date" id="filterDate" class="form-input" style="margin:0;"><button id="resetFilterBtn" class="btn-sm">Reset</button></div><div id="historyList">Memuat...</div></div></div>
             <div id="analyticsPanel" class="tab-panel hidden"><div class="card"><h2>📊 Grafik Mood & Energi</h2><div class="period-btns"><button class="period-btn active" data-period="7">7 Hari</button><button class="period-btn" data-period="14">14 Hari</button><button class="period-btn" data-period="30">30 Hari</button></div><div class="summary-grid" id="moodSummary"></div><div class="chart-wrapper"><div class="chart-container"><canvas id="moodChart"></canvas></div></div></div><div class="card"><h2>⚠️ Statistik Negatif</h2><div id="negativeStats">Menghitung...</div></div></div>
             <div id="exportPanel" class="tab-panel hidden"><div class="card"><h2>📤 Export Laporan</h2><div class="export-buttons"><button id="exportBtn" class="btn-primary-lg">📄 Download</button><button id="copyBtn" class="btn-sm">📋 Salin</button></div><div id="exportPreview" style="margin-top:12px;padding:12px;background:var(--bg);border-radius:8px;">Siap ekspor...</div></div></div>
-            <div id="profilePanel" class="tab-panel hidden"><div class="card"><h2><i class="fas fa-id-card"></i> Profil Saya</h2><div class="profile-avatar" id="profileAvatar">🧠</div><div class="profile-field"><label>Nama / Email</label><p id="profileEmail">-</p></div><div class="profile-field"><label>Tipe Akun</label><p id="profileType">-</p></div><div class="profile-field"><label>Bergabung Sejak</label><p id="profileSince">-</p></div><div class="profile-field"><label>Total Jurnal</label><p id="profileTotalEntries">0 entri</p></div><div class="profile-field"><label>Mood Rata-rata</label><p id="profileAvgMood">-</p></div><button id="clearLocalCacheBtn" class="btn-sm" style="background:var(--danger);color:white;border:none;margin-top:12px;"><i class="fas fa-trash-alt"></i> Hapus Cache Lokal</button></div></div>
+            <div id="profilePanel" class="tab-panel hidden">
+                <div class="card">
+                    <h2><i class="fas fa-id-card"></i> Profil Saya</h2>
+                    <div class="profile-avatar" id="profileAvatar">🧠</div>
+                    <div class="profile-field">
+                        <label>Nama <i class="fas fa-edit edit-icon" id="editNameIcon" style="cursor:pointer; color:var(--primary);"></i></label>
+                        <p id="profileDisplayName">-</p>
+                    </div>
+                    <div class="profile-field">
+                        <label>Jenis Kelamin</label>
+                        <div class="gender-select" id="genderSelect">
+                            <div data-gender="Laki-laki" class="gender-option">👨 Laki-laki</div>
+                            <div data-gender="Perempuan" class="gender-option">👩 Perempuan</div>
+                            <div data-gender="Lainnya" class="gender-option">🌈 Lainnya</div>
+                        </div>
+                    </div>
+                    <div class="profile-field"><label>Email / Akun</label><p id="profileEmail">-</p></div>
+                    <div class="profile-field"><label>Tipe Akun</label><p id="profileType">-</p></div>
+                    <div class="profile-field"><label>Bergabung Sejak</label><p id="profileSince">-</p></div>
+                    <div class="profile-field"><label>Total Jurnal</label><p id="profileTotalEntries">0 entri</p></div>
+                    <div class="profile-field"><label>Mood Rata-rata</label><p id="profileAvgMood">-</p></div>
+                    <button id="clearLocalCacheBtn" class="btn-sm" style="background:var(--danger);color:white;border:none;margin-top:12px;"><i class="fas fa-trash-alt"></i> Hapus Cache Lokal</button>
+                </div>
+            </div>
             <footer>Data tersimpan aman & tersinkronisasi</footer>
         </div>
     </div>
@@ -810,10 +928,12 @@
             if (html.classList.contains('dark')) { html.classList.remove('dark'); localStorage.setItem('ruangPikiran_theme', 'light'); themeTooltip.textContent = '🌙 Mode Gelap'; } 
             else { html.classList.add('dark'); localStorage.setItem('ruangPikiran_theme', 'dark'); themeTooltip.textContent = '☀️ Mode Terang'; }
             document.querySelector('meta[name="theme-color"]').content = html.classList.contains('dark') ? '#1e293b' : '#6366f1';
-            if (!document.getElementById('analyticsPanel').classList.contains('hidden')) renderAnalytics();
+            if (!$('analyticsPanel').classList.contains('hidden')) renderAnalytics();
         });
 
         let currentUser = null, entries = [], chart = null, currentPeriod = 7, unsub = null;
+        let userProfile = { displayName: '', gender: '' };
+        
         const $ = id => document.getElementById(id);
         const today = () => new Date().toISOString().split('T')[0];
         const emoji = m => ({1:"😭",2:"😞",3:"😟",4:"🙁",5:"😐",6:"🙂",7:"😊",8:"😃",9:"😍",10:"🤩"}[m]||"😐");
@@ -821,6 +941,36 @@
         function showError(msg) { const el = $('errorMessage'); el.textContent = '❌ ' + msg; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 4000); }
         function updateSync() { const i = $('syncIndicator'); const o = $('offlineBanner'); if (navigator.onLine) { i.className = 'sync-indicator online'; i.innerHTML = '<i class="fas fa-cloud"></i> Online'; o.classList.remove('show'); } else { i.className = 'sync-indicator offline'; i.innerHTML = '<i class="fas fa-circle"></i> Offline'; o.classList.add('show'); } }
         
+        // Load/Save Profile ke Firestore
+        async function loadUserProfile() {
+            if (!currentUser) return;
+            const profileRef = doc(db, 'users', currentUser.uid);
+            const docSnap = await getDoc(profileRef);
+            if (docSnap.exists() && docSnap.data().profile) {
+                userProfile = docSnap.data().profile;
+            } else {
+                userProfile = { displayName: currentUser.isAnonymous ? 'Pengguna Anonim' : currentUser.email?.split('@')[0] || 'Pengguna', gender: '' };
+                await saveUserProfile();
+            }
+            renderProfile();
+        }
+        
+        async function saveUserProfile() {
+            if (!currentUser) return;
+            const profileRef = doc(db, 'users', currentUser.uid);
+            await setDoc(profileRef, { profile: userProfile }, { merge: true });
+            // Update display name di auth jika bukan anonim
+            if (!currentUser.isAnonymous && userProfile.displayName) {
+                try { await updateProfile(currentUser, { displayName: userProfile.displayName }); } catch(e) {}
+            }
+        }
+        
+        function updateDisplayName() {
+            const display = userProfile.displayName || (currentUser?.isAnonymous ? 'Anonim' : currentUser?.email?.split('@')[0] || 'Pengguna');
+            $('userDisplay').textContent = display;
+            $('profileDisplayName').textContent = display;
+        }
+
         $('showRegister').onclick = () => { $('loginForm').style.display='none'; $('registerForm').style.display='block'; };
         $('showLogin').onclick = () => { $('registerForm').style.display='none'; $('loginForm').style.display='block'; };
         $('loginBtn').onclick = async () => { const e = $('loginEmail').value.trim(); const p = $('loginPassword').value; if (!e || !p) return showError('Isi email dan password'); try { await signInWithEmailAndPassword(auth, e, p); } catch (err) { showError(err.code === 'auth/invalid-credential' ? 'Email atau password salah' : err.message); } };
@@ -828,16 +978,51 @@
         $('anonymousBtn').onclick = async () => { try { await signInAnonymously(auth); } catch (err) { showError('Gagal login anonim'); } };
         $('logoutBtn').onclick = async () => { if (confirm('Keluar?')) { if (unsub) { unsub(); unsub = null; } await signOut(auth); } };
         $('profileBtn').onclick = () => showTab('profile');
+        
+        // Edit Nama Modal
+        const modal = $('editNameModal');
+        $('editNameIcon').onclick = () => {
+            $('editNameInput').value = userProfile.displayName || '';
+            modal.classList.add('show');
+        };
+        $('saveNameBtn').onclick = async () => {
+            const newName = $('editNameInput').value.trim();
+            if (newName) {
+                userProfile.displayName = newName;
+                await saveUserProfile();
+                updateDisplayName();
+                renderProfile();
+            }
+            modal.classList.remove('show');
+        };
+        $('cancelNameBtn').onclick = () => modal.classList.remove('show');
+        modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('show'); };
 
-        onAuthStateChanged(auth, user => {
+        // Gender Selection
+        function setupGenderSelection() {
+            const genderOptions = document.querySelectorAll('.gender-option');
+            genderOptions.forEach(opt => {
+                opt.onclick = async () => {
+                    genderOptions.forEach(o => o.classList.remove('selected'));
+                    opt.classList.add('selected');
+                    userProfile.gender = opt.dataset.gender;
+                    await saveUserProfile();
+                    renderProfile();
+                };
+            });
+        }
+
+        onAuthStateChanged(auth, async user => {
             if (user) {
                 currentUser = user;
                 $('loginPage').style.display = 'none';
                 $('mainApp').classList.add('show');
-                $('userDisplay').textContent = user.isAnonymous ? 'Anonim' : user.email;
                 updateSync();
+                await loadUserProfile();
+                updateDisplayName();
                 loadData();
                 renderProfile();
+                setupGenderSelection();
             } else {
                 currentUser = null;
                 $('loginPage').style.display = 'flex';
@@ -866,14 +1051,14 @@
 
         function renderDashboard() {
             const te = entries.find(e => e.date === today());
-            if (te) { const hd = te.dark?.selfHarm || te.dark?.hopeless; $('todayInsight').innerHTML = `<div style="background:var(--bg);padding:16px;border-radius:12px;"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;"><div><div style="font-size:1.4rem;font-weight:700;">${emoji(te.mood)} Mood: ${te.mood}/10</div><div>⚡ Energi: ${te.energy}/10</div><div style="font-style:italic;">"${te.text.substring(0,100)}${te.text.length>100?'...':''}"</div></div><span class="badge" style="${hd?'background:#ef4444;color:white;':''}">${hd?'⚠️ Pikiran gelap':'✅ Aman'}</span></div></div>`; } 
+            if (te) { const hd = te.dark?.selfHarm || te.dark?.hopeless; $('todayInsight').innerHTML = `<div style="background:var(--bg);padding:16px;border-radius:12px;"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;"><div><div style="font-size:1.4rem;font-weight:700;">${emoji(te.mood)} Mood: ${te.mood}/10</div><div>⚡ Energi: ${te.energy}/10</div><div style="font-style:italic;">"${te.text.substring(0,100)}${te.text.length>100?'...':''}"</div></div><span style="${hd?'background:#ef4444;color:white;padding:4px 12px;border-radius:20px;':''}">${hd?'⚠️ Pikiran gelap':'✅ Aman'}</span></div></div>`; } 
             else $('todayInsight').innerHTML = '<div style="text-align:center;padding:20px;">✨ Belum ada jurnal hari ini.</div>';
             const l7 = entries.slice(0, 7); if (l7.length > 0) { const am = (l7.reduce((s, e) => s + e.mood, 0) / l7.length).toFixed(1); const ld = l7.filter(e => e.mood <= 4).length; const dd = l7.filter(e => e.dark?.selfHarm || e.dark?.hopeless).length; $('aiSummary').innerHTML = `<strong>🧠 7 Hari Terakhir:</strong><br>• Mood rata-rata: <strong>${am}/10</strong><br>• ${ld} hari mood rendah<br>• ${dd} hari pikiran gelap<br>• ${ld>=3?'⚠️ Pertimbangkan konsultasi.':dd>0?'💡 Pikiran gelap terdeteksi.':parseFloat(am)>=7?'🌟 Mood baik!':'📊 Stabil.'}`; } 
             else $('aiSummary').innerHTML = 'Tunggu beberapa jurnal...';
             $('darkTracker').innerHTML = l7.length === 0 ? 'Belum ada data.' : l7.map(e => { const d = e.dark?.selfHarm || e.dark?.hopeless; return `<div style="padding:8px;margin:4px 0;background:${d?'#fef2f2':'#f0fdf4'};border-radius:6px;"><strong>${e.date}</strong>: ${d?'⚠️ Pikiran gelap':'✅ Aman'} ${d?` (Intensitas: ${e.dark?.intensity||1}/5)`:''}</div>`; }).join('');
         }
 
-        function renderHistory() { const f = $('filterDate').value; let fl = f ? entries.filter(e => e.date === f) : [...entries]; fl.sort((a,b)=>new Date(b.date)-new Date(a.date)); $('historyList').innerHTML = fl.length === 0 ? '<p style="text-align:center;padding:20px;">Tidak ada jurnal.</p>' : fl.map(e => `<div class="history-item"><button class="delete-btn" data-del="${e.id}"><i class="fas fa-trash"></i></button><strong>📅 ${e.date}</strong>${(e.dark?.selfHarm||e.dark?.hopeless)?' <span class="badge" style="background:#ef4444;color:white;">⚠️</span>':''}<div>${emoji(e.mood)} Mood: ${e.mood}/10 | ⚡ ${e.energy}/10</div><small>${e.text.substring(0,100)}${e.text.length>100?'...':''}</small>${e.thoughts?.length?`<div style="margin-top:4px;">${e.thoughts.map(t=>`<span class="tag" style="padding:2px 8px;">${t}</span>`).join(' ')}</div>`:''}</div>`).join(''); document.querySelectorAll('.delete-btn').forEach(btn => { btn.onclick = async function() { if(confirm('Hapus jurnal ini?')) { entries = entries.filter(e => e.id.toString() !== this.dataset.del); await deleteEntry(this.dataset.del); } }; }); }
+        function renderHistory() { const f = $('filterDate').value; let fl = f ? entries.filter(e => e.date === f) : [...entries]; fl.sort((a,b)=>new Date(b.date)-new Date(a.date)); $('historyList').innerHTML = fl.length === 0 ? '<p style="text-align:center;padding:20px;">Tidak ada jurnal.</p>' : fl.map(e => `<div class="history-item"><button class="delete-btn" data-del="${e.id}"><i class="fas fa-trash"></i></button><strong>📅 ${e.date}</strong>${(e.dark?.selfHarm||e.dark?.hopeless)?' <span style="background:#ef4444;color:white;padding:2px 8px;border-radius:12px;font-size:0.7rem;">⚠️</span>':''}<div>${emoji(e.mood)} Mood: ${e.mood}/10 | ⚡ ${e.energy}/10</div><small>${e.text.substring(0,100)}${e.text.length>100?'...':''}</small>${e.thoughts?.length?`<div style="margin-top:4px;">${e.thoughts.map(t=>`<span class="tag" style="padding:2px 8px;">${t}</span>`).join(' ')}</div>`:''}</div>`).join(''); document.querySelectorAll('.delete-btn').forEach(btn => { btn.onclick = async function() { if(confirm('Hapus jurnal ini?')) { entries = entries.filter(e => e.id.toString() !== this.dataset.del); await deleteEntry(this.dataset.del); } }; }); }
 
         function renderAnalytics() {
             const days = currentPeriod; const lastDays = [];
@@ -886,6 +1071,12 @@
 
         function renderProfile() {
             if(!currentUser) return;
+            updateDisplayName();
+            const selectedGender = userProfile.gender;
+            document.querySelectorAll('.gender-option').forEach(opt => {
+                if (opt.dataset.gender === selectedGender) opt.classList.add('selected');
+                else opt.classList.remove('selected');
+            });
             $('profileEmail').innerHTML = currentUser.isAnonymous ? 'Akun Anonim' : currentUser.email;
             $('profileType').innerHTML = currentUser.isAnonymous ? '👤 Tamu (data tersimpan di perangkat)' : '🔐 Akun Teregistrasi (Cloud Sync)';
             const createdAt = currentUser.metadata?.creationTime ? new Date(currentUser.metadata.creationTime).toLocaleDateString('id-ID') : 'Baru saja';
@@ -904,7 +1095,7 @@
             if (id === 'analytics') renderAnalytics();
             if (id === 'dashboard') renderDashboard();
             if (id === 'export') $('exportPreview').innerHTML = `<strong>📝 ${entries.length} jurnal siap diekspor.</strong>`;
-            if (id === 'profile') renderProfile();
+            if (id === 'profile') { renderProfile(); setupGenderSelection(); }
         }
 
         document.querySelector('.nav-tabs').addEventListener('click', e => { const btn = e.target.closest('.tab-btn'); if (btn) showTab(btn.dataset.tab); });
