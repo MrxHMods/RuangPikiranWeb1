@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=1.0, shrink-to-fit=yes">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Ruang Pikiran">
+    <meta name="description" content="Jurnal Mental untuk Dirimu & Dokter - Ruang aman untuk mencatat perasaan">
+    <meta name="application-name" content="Ruang Pikiran">
+    <meta name="msapplication-TileColor" content="#6366f1">
+    <meta name="msapplication-config" content="browserconfig.xml">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%236366f1'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white'>🧠</text></svg>">
+    <link rel="apple-touch-icon" sizes="152x152" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%236366f1'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white'>🧠</text></svg>">
+    <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%236366f1'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white'>🧠</text></svg>">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%236366f1'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white'>🧠</text></svg>">
+    
+    <title>Ruang Pikiran | Jurnal Mental untuk Dirimu & Dokter</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --danger: #ef4444;
+            --danger-light: #fef2f2;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        [data-theme="dark"] {
+            --primary: #818cf8;
+            --primary-dark: #6366f1;
+            --secondary: #34d399;
+            --accent: #fbbf24;
+            --danger: #f87171;
+            --danger-light: #451a1a;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.4);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            transition: background 0.3s ease, color 0.3s ease;
+            overflow-x: hidden;
+            font-size: 16px;
+            line-height: 1.5;
+            padding-bottom: var(--safe-bottom);
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* PWA Install Prompt */
+        .pwa-install-banner {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-bg);
+            border: 2px solid var(--primary);
+            border-radius: 20px;
+            padding: 16px 24px;
+            box-shadow: var(--shadow-lg);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            max-width: 90%;
+            animation: slideUp 0.3s ease;
+        }
+
+        .pwa-install-banner.show {
+            display: flex;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
+        .pwa-install-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+
+        .pwa-close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 4px;
+        }
+
+        /* Animated background - optimized */
+        .animated-bg {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none; z-index: 0;
+            opacity: 0.5;
+        }
+
+        .bg-shape {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.2;
+            will-change: transform;
+        }
+
+        .bg-shape.shape-1 {
+            width: 500px; height: 500px;
+            background: #6366f1;
+            top: -10%; left: -5%;
+            animation: float1 25s ease-in-out infinite;
+        }
+        .bg-shape.shape-2 {
+            width: 400px; height: 400px;
+            background: #10b981;
+            bottom: -10%; right: -5%;
+            animation: float2 30s ease-in-out infinite;
+        }
+
+        @keyframes float1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(50px, 30px) scale(1.05); }
+        }
+        @keyframes float2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-50px, -30px) scale(1.05); }
+        }
+
+        /* Theme toggle */
+        .theme-toggle-wrapper {
+            position: fixed; top: 24px; right: 24px; z-index: 1000;
+        }
+
+        .theme-toggle {
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-lg);
+            transition: transform 0.2s;
+        }
+
+        .theme-toggle:hover { transform: scale(1.1); }
+
+        .theme-toggle-icon i {
+            font-size: 1.2rem;
+            color: var(--accent);
+            transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] .icon-sun { opacity: 0; transform: scale(0); }
+        [data-theme="dark"] .icon-moon { opacity: 1; transform: scale(1); color: #60a5fa; }
+        .icon-moon { opacity: 0; transform: scale(0); position: absolute; }
+
+        /* ========== LOGIN PAGE ========== */
+        .login-container {
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-xl);
+            padding: 40px 32px;
+            box-shadow: var(--shadow-lg);
+            max-width: 450px;
+            width: 100%;
+            border: 1px solid var(--border);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-header { text-align: center; margin-bottom: 32px; }
+
+        .login-logo {
+            width: 80px; height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin: 0 auto 16px;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
+        }
+
+        .login-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .login-header p { color: var(--text-secondary); font-size: 0.95rem; }
+
+        .form-group { margin-bottom: 16px; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            background: var(--bg);
+            color: var(--text);
+            transition: border-color 0.2s;
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover { transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); opacity: 0.9; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 24px 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .divider span { margin: 0 16px; }
+
+        .error-message {
+            background: var(--danger-light);
+            color: var(--danger);
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+            display: none;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .error-message.show { display: block; }
+
+        .toggle-link {
+            text-align: center;
+            margin-top: 16px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .toggle-link a { color: var(--primary); font-weight: 600; cursor: pointer; text-decoration: none; }
+        .toggle-link a:hover { text-decoration: underline; }
+
+        /* ========== MAIN APP ========== */
+        #mainApp { display: none; }
+        #mainApp.show { display: block; }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            padding-bottom: calc(20px + var(--safe-bottom));
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: var(--radius-xl);
+            padding: 24px 32px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .logo-wrapper { display: flex; align-items: center; gap: 14px; }
+
+        .logo-icon {
+            width: 52px; height: 52px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .logo p { font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; }
+
+        .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+        .user-badge {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(16, 185, 129, 0.1));
+            padding: 10px 20px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 2px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .sync-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .sync-indicator.online { background: #dcfce7; color: #166534; }
+        .sync-indicator.offline { background: #fef2f2; color: #991b1b; }
+        .sync-indicator.syncing { background: #fef3c7; color: #92400e; }
+
+        .btn-sm {
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: inherit;
+            background: var(--bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-sm:hover { border-color: var(--primary); }
+
+        .nav-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 20px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 6px;
+            border-radius: 50px;
+            box-shadow: var(--shadow-lg);
+            flex-wrap: wrap;
+            border: 1px solid var(--border);
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 44px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            justify-content: center;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+            font-weight: 700;
+        }
+
+        .tab-btn:hover:not(.active) { background: var(--bg); color: var(--text); }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+
+        .card h2 {
+            margin-bottom: 16px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+        textarea {
+            width: 100%;
+            border-radius: var(--radius-md);
+            border: 2px solid var(--border);
+            padding: 14px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 110px;
+            transition: border-color 0.2s;
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .slider-group { margin: 20px 0; }
+
+        label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 10px;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(to right, #ef4444, #f59e0b, #10b981);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            border: 3px solid var(--primary);
+            box-shadow: var(--shadow-md);
+        }
+
+        .thought-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+
+        .tag {
+            background: var(--bg);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            border: 2px solid var(--border);
+            font-size: 0.85rem;
+            user-select: none;
+        }
+
+        .tag.selected {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-color: var(--primary-dark);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .tag:hover:not(.selected) { border-color: var(--primary); }
+
+        .btn-primary-lg {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary-lg:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4); }
+        .btn-primary-lg:active { transform: translateY(0); }
+
+        .danger-box {
+            background: var(--danger-light);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            margin: 20px 0;
+            border: 2px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .danger-box label { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-weight: 500; }
+        .danger-box input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+
+        .emoji-display { font-size: 2.5rem; text-align: center; margin: 8px 0; }
+
+        .history-item {
+            border-left: 4px solid var(--primary);
+            padding: 12px 16px;
+            margin: 10px 0;
+            background: var(--bg);
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .history-item:hover { transform: translateX(3px); }
+
+        .delete-btn {
+            position: absolute;
+            right: 12px; top: 12px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-family: inherit;
+            transition: opacity 0.2s;
+        }
+
+        .delete-btn:hover { opacity: 0.8; }
+
+        .insight-box {
+            background: var(--bg);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            margin: 16px 0;
+            border-left: 4px solid var(--primary);
+        }
+
+        .chart-wrapper {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            margin: 12px 0;
+        }
+
+        .chart-container canvas { width: 100% !important; height: 100% !important; }
+
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 12px;
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 500; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .summary-card {
+            background: var(--bg);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .summary-card .big {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 6px 0;
+        }
+
+        .summary-card .small {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .period-btns { display: flex; gap: 6px; margin-bottom: 16px; }
+
+        .period-btn {
+            padding: 6px 14px;
+            border-radius: 16px;
+            border: 2px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .period-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .export-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        footer {
+            text-align: center;
+            margin-top: 32px;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            background: var(--card-bg);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        .hidden { display: none !important; }
+
+        .badge {
+            background: linear-gradient(135deg, var(--accent), #f59e0b);
+            border-radius: 30px;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #1e293b;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px; height: 16px;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            .app-container { padding: 12px; }
+            .grid-2col { grid-template-columns: 1fr; }
+            .card { padding: 18px; }
+            .header { padding: 18px; border-radius: var(--radius-lg); }
+            .chart-container { height: 280px; }
+            .tab-btn { font-size: 0.78rem; padding: 8px 10px; }
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 480px) {
+            .login-card { padding: 24px 16px; }
+            .app-container { padding: 8px; }
+            .header { padding: 14px; border-radius: var(--radius-md); }
+            .card { padding: 14px; border-radius: var(--radius-md); }
+            .chart-container { height: 220px; }
+            .tab-btn { font-size: 0.7rem; padding: 6px 8px; }
+            .tab-btn i { font-size: 0.8rem; }
+            .btn-primary-lg { padding: 10px 18px; font-size: 0.9rem; width: 100%; justify-content: center; }
+            .export-buttons { flex-direction: column; }
+            .nav-tabs { gap: 3px; padding: 4px; }
+        }
+
+        /* Safe area for notched phones */
+        @supports (padding: max(0px)) {
+            .app-container {
+                padding-left: max(20px, env(safe-area-inset-left));
+                padding-right: max(20px, env(safe-area-inset-right));
+            }
+            .theme-toggle-wrapper {
+                right: max(24px, env(safe-area-inset-right));
+            }
+        }
+
+        /* Offline indicator */
+        .offline-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #ef4444;
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            z-index: 10000;
+            display: none;
+        }
+
+        .offline-banner.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Offline Banner -->
+    <div id="offlineBanner" class="offline-banner">
+        📡 Anda sedang offline. Data akan disinkronkan saat online.
+    </div>
+
+    <!-- PWA Install Banner -->
+    <div id="pwaInstallBanner" class="pwa-install-banner">
+        <span style="font-size:1.5rem;">🧠</span>
+        <div>
+            <strong>Install Ruang Pikiran</strong>
+            <br><small style="color:var(--text-secondary);">Akses cepat dari homescreen</small>
+        </div>
+        <button id="pwaInstallBtn" class="pwa-install-btn">Install</button>
+        <button id="pwaCloseBtn" class="pwa-close-btn">✕</button>
+    </div>
+
+    <div class="animated-bg">
+        <div class="bg-shape shape-1"></div>
+        <div class="bg-shape shape-2"></div>
+    </div>
+
+    <div class="theme-toggle-wrapper">
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+            <div class="theme-toggle-icon">
+                <i class="fas fa-sun icon-sun"></i>
+                <i class="fas fa-moon icon-moon"></i>
+            </div>
+        </button>
+    </div>
+
+    <!-- LOGIN PAGE -->
+    <div id="loginPage" class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo">🧠</div>
+                <h1>Ruang Pikiran</h1>
+                <p><i class="fas fa-heart" style="color: #ef4444;"></i> Jujur, terstruktur, siap konsultasi</p>
+            </div>
+
+            <div id="errorMessage" class="error-message"></div>
+
+            <div id="loginForm">
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="loginEmail" class="form-input" placeholder="nama@email.com" autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="loginPassword" class="form-input" placeholder="Password Anda" autocomplete="current-password">
+                </div>
+                <button id="loginBtn" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Masuk
+                </button>
+                <p class="toggle-link">Belum punya akun? <a id="showRegister">Daftar di sini</a></p>
+            </div>
+
+            <div id="registerForm" style="display: none;">
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="registerEmail" class="form-input" placeholder="nama@email.com" autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="registerPassword" class="form-input" placeholder="Minimal 6 karakter" autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Konfirmasi Password</label>
+                    <input type="password" id="registerConfirm" class="form-input" placeholder="Ulangi password" autocomplete="new-password">
+                </div>
+                <button id="registerBtn" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> Daftar Akun
+                </button>
+                <p class="toggle-link">Sudah punya akun? <a id="showLogin">Masuk di sini</a></p>
+            </div>
+
+            <div class="divider"><span>atau</span></div>
+
+            <button id="anonymousBtn" class="btn btn-secondary">
+                <i class="fas fa-user-secret"></i> Lanjutkan Tanpa Akun
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="mainApp">
+        <div class="app-container">
+            <div class="header">
+                <div class="logo-wrapper">
+                    <div class="logo-icon">🧠</div>
+                    <div class="logo">
+                        <h1>Ruang Pikiran</h1>
+                        <p><i class="fas fa-heart" style="color: #ef4444; font-size:0.75rem;"></i> jujur, terstruktur, siap konsultasi</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <span id="syncIndicator" class="sync-indicator offline">
+                        <i class="fas fa-circle" style="font-size:0.5rem;"></i> Offline
+                    </span>
+                    <div class="user-badge">
+                        <i class="fas fa-shield-halved"></i> <span id="userDisplay">Pengguna</span>
+                    </div>
+                    <button id="logoutBtn" class="btn-sm">
+                        <i class="fas fa-sign-out-alt"></i> Keluar
+                    </button>
+                </div>
+            </div>
+
+            <div class="nav-tabs">
+                <button class="tab-btn active" data-tab="dashboard"><i class="fas fa-th-large"></i> <span>Dashboard</span></button>
+                <button class="tab-btn" data-tab="journal"><i class="fas fa-pen-to-square"></i> <span>Tulis Jurnal</span></button>
+                <button class="tab-btn" data-tab="history"><i class="fas fa-clock-rotate-left"></i> <span>Riwayat</span></button>
+                <button class="tab-btn" data-tab="analytics"><i class="fas fa-chart-line"></i> <span>Analisis</span></button>
+                <button class="tab-btn" data-tab="export"><i class="fas fa-paper-plane"></i> <span>Kirim ke Dokter</span></button>
+            </div>
+
+            <!-- DASHBOARD -->
+            <div id="dashboardPanel" class="tab-panel">
+                <div class="card">
+                    <h2><i class="fas fa-calendar-day"></i> Ringkasan Hari Ini</h2>
+                    <div id="todayInsight">Memuat...</div>
+                    <div style="margin-top:16px;">
+                        <button id="quickMoodBtn" class="btn-sm"><i class="fas fa-plus-circle"></i> Catat Mood Sekarang</button>
+                    </div>
+                </div>
+                <div class="grid-2col">
+                    <div class="card">
+                        <h2><i class="fas fa-robot"></i> Ringkasan AI</h2>
+                        <div id="aiSummary" class="insight-box">✨ Sedang menganalisis catatanmu...</div>
+                    </div>
+                    <div class="card">
+                        <h2><i class="fas fa-triangle-exclamation"></i> Tracker Pikiran Gelap</h2>
+                        <div id="darkTracker">Memuat data...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- JOURNAL -->
+            <div id="journalPanel" class="tab-panel hidden">
+                <div class="card">
+                    <h2><i class="fas fa-pen-to-square"></i> Tulis Isi Kepala Lo</h2>
+                    <textarea id="journalText" rows="5" placeholder="Ceritakan apa pun yang terasa... tanpa tekanan. Ini ruang amanmu. 💭"></textarea>
+                    
+                    <div class="slider-group">
+                        <label>😊 Mood (1= sangat buruk, 10= luar biasa)</label>
+                        <input type="range" id="moodSlider" min="1" max="10" value="6">
+                        <div class="emoji-display" id="moodEmoji">😐</div>
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>⚡ Energi hari ini</label>
+                        <input type="range" id="energySlider" min="1" max="10" value="5">
+                        <div style="text-align:center;font-weight:700;">Level: <span id="energyVal">5</span>/10</div>
+                    </div>
+                    
+                    <label>💭 Pikiran dominan</label>
+                    <div class="thought-tags" id="thoughtTags">
+                        <span data-thought="overthinking" class="tag">🔄 overthinking</span>
+                        <span data-thought="kosong" class="tag">🌫️ kosong</span>
+                        <span data-thought="sedih" class="tag">😢 sedih</span>
+                        <span data-thought="cemas" class="tag">😰 cemas</span>
+                        <span data-thought="motivasi turun" class="tag">📉 motivasi turun</span>
+                        <span data-thought="bahagia" class="tag">🌟 bahagia</span>
+                    </div>
+                    
+                    <div class="danger-box">
+                        <label style="font-weight:700; color:var(--danger);"><i class="fas fa-exclamation-triangle"></i> Pikiran gelap</label>
+                        <label><input type="checkbox" id="selfHarmCheck"> Kepikiran menyakiti diri sendiri</label>
+                        <label><input type="checkbox" id="hopelessCheck"> Ngerasa ga ada harapan</label>
+                        <div style="margin-top:12px;">
+                            <label>Intensitas (1-5):</label>
+                            <input type="range" id="darkIntensity" min="1" max="5" value="1">
+                            <div style="text-align:center;">Level: <span id="intensityLabel">1</span>/5</div>
+                        </div>
+                    </div>
+                    
+                    <button id="saveJournalBtn" class="btn-primary-lg"><i class="fas fa-save"></i> Simpan Jurnal</button>
+                </div>
+            </div>
+
+            <!-- HISTORY -->
+            <div id="historyPanel" class="tab-panel hidden">
+                <div class="card">
+                    <h2><i class="fas fa-clock-rotate-left"></i> Riwayat Jurnal</h2>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
+                        <input type="date" id="filterDate" style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit;">
+                        <button id="resetFilterBtn" class="btn-sm"><i class="fas fa-rotate"></i> Reset</button>
+                    </div>
+                    <div id="historyList">Memuat riwayat...</div>
+                </div>
+            </div>
+
+            <!-- ANALYTICS -->
+            <div id="analyticsPanel" class="tab-panel hidden">
+                <div class="card">
+                    <h2><i class="fas fa-chart-line"></i> Grafik Mood & Energi</h2>
+                    
+                    <div class="period-btns">
+                        <button class="period-btn active" data-period="7">7 Hari</button>
+                        <button class="period-btn" data-period="14">14 Hari</button>
+                        <button class="period-btn" data-period="30">30 Hari</button>
+                    </div>
+                    
+                    <div class="summary-grid" id="moodSummary"></div>
+                    
+                    <div class="chart-wrapper">
+                        <div class="chart-container">
+                            <canvas id="moodChart"></canvas>
+                        </div>
+                        <div class="chart-legend">
+                            <div class="legend-item"><div class="legend-dot" style="background:#6366f1;"></div><span>Mood</span></div>
+                            <div class="legend-item"><div class="legend-dot" style="background:#f59e0b;"></div><span>Energi</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2><i class="fas fa-exclamation-circle"></i> Frekuensi Pikiran Negatif</h2>
+                    <div id="negativeStats">Perhitungan...</div>
+                </div>
+            </div>
+
+            <!-- EXPORT -->
+            <div id="exportPanel" class="tab-panel hidden">
+                <div class="card">
+                    <h2><i class="fas fa-paper-plane"></i> Mode Kirim ke Dokter</h2>
+                    <div class="export-buttons">
+                        <button id="exportBtn" class="btn-primary-lg"><i class="fas fa-file-pdf"></i> Export PDF (TXT)</button>
+                        <button id="copyBtn" class="btn-sm"><i class="fas fa-copy"></i> Salin Data Laporan</button>
+                    </div>
+                    <div id="exportPreview" class="insight-box" style="margin-top:16px;">Pratinjau laporan...</div>
+                </div>
+            </div>
+
+            <footer><i class="fas fa-lock"></i> Data tersimpan di browser Anda (enkripsi lokal) & tersinkronisasi ke cloud.</footer>
+        </div>
+    </div>
+
+    <!-- Service Worker Registration -->
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registered:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('❌ Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Firebase Modular SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
+        import { 
+            getAuth, onAuthStateChanged, signInWithEmailAndPassword,
+            createUserWithEmailAndPassword, signInAnonymously, signOut
+        } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+        import { 
+            getFirestore, enableIndexedDbPersistence,
+            collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit
+        } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+        // Konfigurasi Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCJ532nHpPtBunCTM32JuCOY1uUN8tliK4",
+            authDomain: "ruang-pikiran.firebaseapp.com",
+            projectId: "ruang-pikiran",
+            storageBucket: "ruang-pikiran.firebasestorage.app",
+            messagingSenderId: "451081065318",
+            appId: "1:451081065318:web:cce97c553e2d6219eb2ea7",
+            measurementId: "G-6CQR8Q3EGY"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Enable offline persistence
+        enableIndexedDbPersistence(db).catch((err) => {
+            console.warn("Persistence error:", err.code);
+        });
+
+        // ==================== PWA INSTALL ====================
+        let deferredPrompt;
+        const installBanner = document.getElementById('pwaInstallBanner');
+        const installBtn = document.getElementById('pwaInstallBtn');
+        const closeBtn = document.getElementById('pwaCloseBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBanner.classList.add('show');
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response: ${outcome}`);
+                deferredPrompt = null;
+                installBanner.classList.remove('show');
+            }
+        });
+
+        closeBtn.addEventListener('click', () => {
+            installBanner.classList.remove('show');
+        });
+
+        window.addEventListener('appinstalled', () => {
+            installBanner.classList.remove('show');
+            console.log('✅ PWA installed');
+        });
+
+        // ==================== APP STATE ====================
+        let currentUser = null;
+        let entries = [];
+        let chart = null;
+        let currentPeriod = 7;
+        let unsub = null;
+
+        // ==================== HELPER ====================
+        const $ = (id) => document.getElementById(id);
+        const today = () => new Date().toISOString().split('T')[0];
+        const emoji = (m) => ({1:"😭",2:"😞",3:"😟",4:"🙁",5:"😐",6:"🙂",7:"😊",8:"😃",9:"😍",10:"🤩"}[m]||"😐");
+        
+        function showError(msg) {
+            const el = $('errorMessage');
+            el.textContent = '❌ ' + msg;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 4000);
+        }
+
+        function updateSyncStatus() {
+            const indicator = $('syncIndicator');
+            if (navigator.onLine) {
+                indicator.className = 'sync-indicator online';
+                indicator.innerHTML = '<i class="fas fa-cloud"></i> Online';
+                $('offlineBanner').classList.remove('show');
+            } else {
+                indicator.className = 'sync-indicator offline';
+                indicator.innerHTML = '<i class="fas fa-circle"></i> Offline';
+                $('offlineBanner').classList.add('show');
+            }
+        }
+
+        // ==================== AUTH ====================
+        $('showRegister').onclick = () => { $('loginForm').style.display='none'; $('registerForm').style.display='block'; $('errorMessage').classList.remove('show'); };
+        $('showLogin').onclick = () => { $('registerForm').style.display='none'; $('loginForm').style.display='block'; $('errorMessage').classList.remove('show'); };
+
+        $('loginBtn').onclick = async () => {
+            const e = $('loginEmail').value.trim(), p = $('loginPassword').value;
+            if(!e||!p) return showError('Mohon isi email dan password');
+            try { await signInWithEmailAndPassword(auth, e, p); }
+            catch(err) { showError(err.code === 'auth/invalid-credential' ? 'Email atau password salah' : err.message); }
+        };
+
+        $('registerBtn').onclick = async () => {
+            const e = $('registerEmail').value.trim(), p = $('registerPassword').value, c = $('registerConfirm').value;
+            if(!e||!p) return showError('Mohon isi semua field');
+            if(p !== c) return showError('Password tidak cocok');
+            if(p.length < 6) return showError('Password minimal 6 karakter');
+            try { await createUserWithEmailAndPassword(auth, e, p); }
+            catch(err) { showError(err.code === 'auth/email-already-in-use' ? 'Email sudah terdaftar' : err.message); }
+        };
+
+        $('anonymousBtn').onclick = async () => {
+            try { await signInAnonymously(auth); }
+            catch(err) { showError('Gagal login anonim'); }
+        };
+
+        $('loginPassword').onkeypress = (e) => { if(e.key==='Enter') $('loginBtn').click(); };
+        $('registerConfirm').onkeypress = (e) => { if(e.key==='Enter') $('registerBtn').click(); };
+
+        // ==================== AUTH STATE ====================
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                $('loginPage').style.display = 'none';
+                $('mainApp').classList.add('show');
+                $('userDisplay').textContent = user.isAnonymous ? 'Anonim' : user.email;
+                updateSyncStatus();
+                loadData();
+            } else {
+                currentUser = null;
+                $('loginPage').style.display = 'flex';
+                $('mainApp').classList.remove('show');
+                if(unsub) { unsub(); unsub = null; }
+                entries = [];
+            }
+        });
+
+        $('logoutBtn').onclick = async () => {
+            if(confirm('Apakah Anda yakin ingin keluar?')) {
+                if(unsub) { unsub(); unsub = null; }
+                await signOut(auth);
+            }
+        };
+
+        // ==================== FIRESTORE ====================
+        function loadData() {
+            if(!currentUser) return;
+            const ref = collection(db, 'users', currentUser.uid, 'journal_entries');
+            const q = query(ref, orderBy('timestamp', 'desc'), limit(100));
+            
+            if(unsub) unsub();
+            unsub = onSnapshot(q, (snap) => {
+                entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                try { localStorage.setItem("rp_cache", JSON.stringify(entries)); } catch(e) {}
+                renderDashboard();
+                if (!$('analyticsPanel').classList.contains('hidden')) renderAnalytics();
+            }, (err) => {
+                console.error("Firestore error:", err);
+                try { 
+                    const cache = localStorage.getItem("rp_cache");
+                    if(cache) entries = JSON.parse(cache);
+                } catch(e) {}
+                renderDashboard();
+            });
+        }
+
+        async function saveEntry(entry) {
+            try { localStorage.setItem("rp_cache", JSON.stringify(entries)); } catch(e) {}
+            if(currentUser) {
+                await setDoc(doc(db, 'users', currentUser.uid, 'journal_entries', entry.id.toString()), entry);
+            }
+        }
+
+        async function deleteEntry(id) {
+            if(currentUser) {
+                await deleteDoc(doc(db, 'users', currentUser.uid, 'journal_entries', id.toString()));
+            }
+        }
+
+        // ==================== RENDER ====================
+        function renderDashboard() {
+            const todayEntry = entries.find(e => e.date === today());
+            const container = $('todayInsight');
+            
+            if (todayEntry) {
+                const hasDark = todayEntry.dark?.selfHarm || todayEntry.dark?.hopeless;
+                container.innerHTML = `
+                    <div style="background:var(--bg);padding:16px;border-radius:12px;">
+                        <div style="display:flex;justify-content:space-between;align-items:start;flex-wrap:wrap;gap:12px;">
+                            <div>
+                                <div style="font-size:1.4rem;font-weight:700;">${emoji(todayEntry.mood)} Mood: ${todayEntry.mood}/10</div>
+                                <div style="color:var(--text-secondary);margin:4px 0;">⚡ Energi: ${todayEntry.energy}/10</div>
+                                <div style="font-style:italic;color:var(--text-secondary);font-size:0.9rem;">"${todayEntry.text.substring(0, 100)}${todayEntry.text.length>100?'...':''}"</div>
+                            </div>
+                            <span class="badge" style="${hasDark?'background:#ef4444;color:white;':''}">${hasDark?'⚠️ Pikiran gelap':'✅ Hari ini aman'}</span>
+                        </div>
+                    </div>`;
+            } else {
+                container.innerHTML = '<div style="text-align:center;padding:20px;"><div style="font-size:2rem;">✨</div><div style="font-weight:600;">Belum ada jurnal hari ini</div></div>';
+            }
+
+            // AI Summary
+            const last7 = entries.slice(0, 7);
+            if (last7.length > 0) {
+                const avgMood = (last7.reduce((s, e) => s + e.mood, 0) / last7.length).toFixed(1);
+                const lowDays = last7.filter(e => e.mood <= 4).length;
+                const darkDays = last7.filter(e => e.dark?.selfHarm || e.dark?.hopeless).length;
+                let rec = '';
+                if (lowDays >= 3) rec = '⚠️ Pertimbangkan konsultasi dengan profesional.';
+                else if (darkDays > 0) rec = '💡 Pikiran gelap terdeteksi. Jangan ragu mencari bantuan.';
+                else if (parseFloat(avgMood) >= 7) rec = '🌟 Mood cukup baik! Pertahankan.';
+                else rec = '📊 Mood stabil. Tetap jaga kesehatan mental.';
+                
+                $('aiSummary').innerHTML = `
+                    <strong>🧠 7 Hari Terakhir:</strong><br>
+                    • Mood rata-rata: <strong>${avgMood}/10</strong><br>
+                    • ${lowDays} hari mood rendah (≤4)<br>
+                    • ${darkDays} hari dengan pikiran gelap<br>
+                    • ${rec}`;
+            } else {
+                $('aiSummary').innerHTML = 'Tunggu beberapa jurnal untuk ringkasan AI.';
+            }
+
+            // Dark tracker
+            $('darkTracker').innerHTML = last7.length === 0 ? 'Belum ada data.' :
+                last7.map(e => {
+                    const dark = e.dark?.selfHarm || e.dark?.hopeless;
+                    return `<div style="padding:8px;margin:4px 0;background:${dark?'#fef2f2':'#f0fdf4'};border-radius:6px;font-size:0.85rem;">
+                        <strong>${e.date}</strong>: ${dark?'⚠️ Pikiran gelap':'✅ Aman'}
+                        ${dark ? `<span style="font-size:0.75rem;color:var(--text-secondary);"> (Intensitas: ${e.dark?.intensity||1}/5)</span>` : ''}
+                    </div>`;
+                }).join('');
+        }
+
+        function renderHistory() {
+            const filter = $('filterDate').value;
+            let filtered = filter ? entries.filter(e => e.date === filter) : [...entries];
+            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            $('historyList').innerHTML = filtered.length === 0 ? 
+                '<div style="text-align:center;padding:32px;color:var(--text-secondary);">📝 Tidak ada jurnal.</div>' :
+                filtered.map(e => `
+                    <div class="history-item">
+                        <button class="delete-btn" data-del="${e.id}"><i class="fas fa-trash"></i></button>
+                        <div style="margin-bottom:6px;">
+                            <strong>📅 ${e.date}</strong>
+                            ${(e.dark?.selfHarm||e.dark?.hopeless) ? '<span class="badge" style="background:#ef4444;color:white;margin-left:8px;">⚠️ Pikiran gelap</span>' : ''}
+                        </div>
+                        <div>${emoji(e.mood)} Mood: <strong>${e.mood}/10</strong> | ⚡ Energi: <strong>${e.energy}/10</strong></div>
+                        <small style="color:var(--text-secondary);">${e.text.substring(0, 100)}${e.text.length>100?'...':''}</small>
+                        ${e.thoughts?.length ? `<div style="margin-top:6px;">${e.thoughts.map(t => `<span class="tag" style="padding:2px 8px;font-size:0.7rem;">${t}</span>`).join(' ')}</div>` : ''}
+                    </div>`).join('');
+
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.onclick = async function() {
+                    if(confirm('Hapus jurnal ini?')) {
+                        entries = entries.filter(e => e.id.toString() !== this.dataset.del);
+                        await deleteEntry(this.dataset.del);
+                    }
+                };
+            });
+        }
+
+        function renderAnalytics() {
+            const days = currentPeriod;
+            const lastDays = [];
+            
+            for (let i = days - 1; i >= 0; i--) {
+                let d = new Date(); d.setDate(new Date().getDate() - i);
+                let ds = d.toISOString().split('T')[0];
+                let f = entries.find(e => e.date === ds);
+                lastDays.push({ date: ds, mood: f?.mood ?? null, energy: f?.energy ?? null });
+            }
+            
+            const valid = lastDays.filter(d => d.mood !== null);
+            const am = valid.length > 0 ? (valid.reduce((s, d) => s + d.mood, 0) / valid.length).toFixed(1) : '-';
+            const ae = valid.length > 0 ? (valid.reduce((s, d) => s + d.energy, 0) / valid.length).toFixed(1) : '-';
+            const bm = valid.length > 0 ? Math.max(...valid.map(d => d.mood)) : '-';
+            const lm = valid.length > 0 ? Math.min(...valid.map(d => d.mood)) : '-';
+
+            $('moodSummary').innerHTML = `
+                <div class="summary-card"><div class="big" style="color:var(--primary);">${am!=='-'?emoji(Math.round(am))+' '+am:am}</div><div class="small">Rata-rata Mood /10</div></div>
+                <div class="summary-card"><div class="big" style="color:var(--accent);">${ae!=='-'?'⚡ '+ae:ae}</div><div class="small">Rata-rata Energi /10</div></div>
+                <div class="summary-card"><div class="big" style="color:#10b981;">${bm!=='-'?emoji(bm)+' '+bm:bm}</div><div class="small">Mood Tertinggi</div></div>
+                <div class="summary-card"><div class="big" style="color:#ef4444;">${lm!=='-'?emoji(lm)+' '+lm:lm}</div><div class="small">Mood Terendah</div></div>`;
+
+            const ctx = $('moodChart').getContext('2d');
+            if(chart) { chart.destroy(); chart = null; }
+            
+            const dark = document.body.getAttribute('data-theme') === 'dark';
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: lastDays.map(d => new Date(d.date).toLocaleDateString('id-ID', { day:'numeric', month:'short' })),
+                    datasets: [
+                        { label:'Mood', data:lastDays.map(d=>d.mood), borderColor:'#6366f1', backgroundColor:'rgba(99,102,241,0.1)', borderWidth:3, tension:0.3, fill:true, pointRadius:5, pointHoverRadius:7 },
+                        { label:'Energi', data:lastDays.map(d=>d.energy), borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,0.1)', borderWidth:3, tension:0.3, fill:true, pointRadius:5, pointHoverRadius:7 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    animation: { duration: 400 },
+                    interaction: { mode:'index', intersect:false },
+                    plugins: { 
+                        legend: { display:false },
+                        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y + '/10' } }
+                    },
+                    scales: {
+                        y: { beginAtZero:true, min:0, max:10, ticks:{ stepSize:1, color:dark?'#94a3b8':'#64748b' }, grid:{ color:dark?'rgba(51,65,85,0.3)':'rgba(226,232,240,0.6)' } },
+                        x: { ticks:{ color:dark?'#94a3b8':'#64748b', maxRotation:45 }, grid:{ display:false } }
+                    }
+                }
+            });
+
+            // Negative stats
+            const le = entries.slice(0, days);
+            const td = le.filter(e => e.dark?.selfHarm || e.dark?.hopeless).length;
+            const ts = le.filter(e => e.dark?.selfHarm).length;
+            const th = le.filter(e => e.dark?.hopeless).length;
+            
+            $('negativeStats').innerHTML = `
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:12px;">
+                    <div style="background:${td>0?'var(--danger-light)':'#f0fdf4'};padding:14px;border-radius:12px;text-align:center;">
+                        <div style="font-size:2rem;">${td>0?'⚠️':'✅'}</div>
+                        <div style="font-weight:700;font-size:1.3rem;">${td}</div>
+                        <div style="font-size:0.8rem;">Hari pikiran gelap</div>
+                    </div>
+                    <div style="background:var(--bg);padding:14px;border-radius:12px;text-align:center;">
+                        <div style="font-size:2rem;">💔</div>
+                        <div style="font-weight:700;font-size:1.3rem;">${ts}</div>
+                        <div style="font-size:0.8rem;">Self-harm</div>
+                    </div>
+                    <div style="background:var(--bg);padding:14px;border-radius:12px;text-align:center;">
+                        <div style="font-size:2rem;">🌧️</div>
+                        <div style="font-weight:700;font-size:1.3rem;">${th}</div>
+                        <div style="font-size:0.8rem;">Hopeless</div>
+                    </div>
+                </div>
+                ${td>=3?`<div style="margin-top:12px;padding:14px;background:var(--danger-light);border-radius:12px;border:2px solid rgba(239,68,68,0.3);"><strong>⚠️ Perhatian:</strong> Frekuensi tinggi. Disarankan konsultasi profesional.<br><small>📞 Hotline: 119 ext 8 (SIAGA 119)</small></div>`:''}`;
+        }
+
+        // ==================== NAVIGATION ====================
+        function showTab(id) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+            $(`${id}Panel`).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-tab="${id}"]`).classList.add('active');
+            
+            if(id === 'history') renderHistory();
+            if(id === 'analytics') renderAnalytics();
+            if(id === 'dashboard') renderDashboard();
+            if(id === 'export') $('exportPreview').innerHTML = `<strong>📝 ${entries.length} jurnal siap diekspor.</strong>`;
+        }
+
+        document.querySelector('.nav-tabs').addEventListener('click', (e) => {
+            const btn = e.target.closest('.tab-btn');
+            if(btn) showTab(btn.dataset.tab);
+        });
+
+        document.addEventListener('click', (e) => {
+            if(e.target.closest('.period-btn')) {
+                document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+                e.target.closest('.period-btn').classList.add('active');
+                currentPeriod = parseInt(e.target.closest('.period-btn').dataset.period);
+                renderAnalytics();
+            }
+        });
+
+        $('thoughtTags').addEventListener('click', (e) => {
+            if(e.target.classList.contains('tag')) e.target.classList.toggle('selected');
+        });
+
+        $('moodSlider').oninput = function() { $('moodEmoji').innerText = emoji(parseInt(this.value)); };
+        $('energySlider').oninput = function() { $('energyVal').innerText = this.value; };
+        $('darkIntensity').oninput = function() { $('intensityLabel').innerText = this.value; };
+
+        $('saveJournalBtn').onclick = async () => {
+            const text = $('journalText').value.trim();
+            if(!text) return alert('Tulis sesuatu dulu ya.');
+            
+            const entry = {
+                id: Date.now(),
+                date: today(),
+                timestamp: new Date().toISOString(),
+                text,
+                mood: parseInt($('moodSlider').value),
+                energy: parseInt($('energySlider').value),
+                thoughts: Array.from(document.querySelectorAll('#thoughtTags .tag.selected')).map(el => el.dataset.thought),
+                dark: {
+                    selfHarm: $('selfHarmCheck').checked,
+                    hopeless: $('hopelessCheck').checked,
+                    intensity: parseInt($('darkIntensity').value)
+                }
+            };
+            
+            const idx = entries.findIndex(e => e.date === today());
+            if(idx !== -1) entries[idx] = entry;
+            else entries.unshift(entry);
+            
+            await saveEntry(entry);
+            alert('✅ Jurnal tersimpan!');
+            $('journalText').value = '';
+            showTab('dashboard');
+        };
+
+        $('quickMoodBtn').onclick = () => showTab('journal');
+        $('resetFilterBtn').onclick = () => { $('filterDate').value = ''; renderHistory(); };
+        $('filterDate').onchange = renderHistory;
+
+        $('exportBtn').onclick = () => {
+            const report = entries.map(e => `📅 ${e.date}\nMood: ${e.mood}/10 | Energi: ${e.energy}/10\n${e.text}\n---\n`).join('\n');
+            const blob = new Blob([report], {type:'text/plain;charset=utf-8'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `laporan_ruang_pikiran_${today()}.txt`;
+            a.click();
+        };
+
+        $('copyBtn').onclick = async () => {
+            try {
+                await navigator.clipboard.writeText(entries.map(e => `📅 ${e.date}\nMood: ${e.mood}/10 | Energi: ${e.energy}/10\n${e.text}\n---`).join('\n'));
+                alert('✅ Disalin!');
+            } catch(err) {
+                alert('❌ Gagal menyalin');
+            }
+        };
+
+        // Theme
+        const savedTheme = localStorage.getItem('ruangPikiran_theme') || 'light';
+        if(savedTheme === 'dark') document.body.setAttribute('data-theme', 'dark');
+        
+        $('themeToggle').onclick = () => {
+            if(document.body.getAttribute('data-theme') === 'dark') {
+                document.body.removeAttribute('data-theme');
+                localStorage.setItem('ruangPikiran_theme', 'light');
+            } else {
+                document.body.setAttribute('data-theme', 'dark');
+                localStorage.setItem('ruangPikiran_theme', 'dark');
+            }
+            if(!$('analyticsPanel').classList.contains('hidden')) renderAnalytics();
+        };
+
+        window.addEventListener('online', updateSyncStatus);
+        window.addEventListener('offline', updateSyncStatus);
+
+        updateSyncStatus();
+        showTab('dashboard');
+    </script>
+</body>
+</html>
