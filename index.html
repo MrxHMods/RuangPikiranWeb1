@@ -894,7 +894,6 @@
                         <div class="gender-select" id="genderSelect">
                             <div data-gender="Laki-laki" class="gender-option">👨 Laki-laki</div>
                             <div data-gender="Perempuan" class="gender-option">👩 Perempuan</div>
-                            <div data-gender="Lainnya" class="gender-option">🌈 Lainnya</div>
                         </div>
                     </div>
                     <div class="profile-field"><label>Email / Akun</label><p id="profileEmail">-</p></div>
@@ -941,7 +940,6 @@
         function showError(msg) { const el = $('errorMessage'); el.textContent = '❌ ' + msg; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 4000); }
         function updateSync() { const i = $('syncIndicator'); const o = $('offlineBanner'); if (navigator.onLine) { i.className = 'sync-indicator online'; i.innerHTML = '<i class="fas fa-cloud"></i> Online'; o.classList.remove('show'); } else { i.className = 'sync-indicator offline'; i.innerHTML = '<i class="fas fa-circle"></i> Offline'; o.classList.add('show'); } }
         
-        // Load/Save Profile ke Firestore
         async function loadUserProfile() {
             if (!currentUser) return;
             const profileRef = doc(db, 'users', currentUser.uid);
@@ -959,7 +957,6 @@
             if (!currentUser) return;
             const profileRef = doc(db, 'users', currentUser.uid);
             await setDoc(profileRef, { profile: userProfile }, { merge: true });
-            // Update display name di auth jika bukan anonim
             if (!currentUser.isAnonymous && userProfile.displayName) {
                 try { await updateProfile(currentUser, { displayName: userProfile.displayName }); } catch(e) {}
             }
@@ -979,7 +976,6 @@
         $('logoutBtn').onclick = async () => { if (confirm('Keluar?')) { if (unsub) { unsub(); unsub = null; } await signOut(auth); } };
         $('profileBtn').onclick = () => showTab('profile');
         
-        // Edit Nama Modal
         const modal = $('editNameModal');
         $('editNameIcon').onclick = () => {
             $('editNameInput').value = userProfile.displayName || '';
@@ -998,7 +994,6 @@
         $('cancelNameBtn').onclick = () => modal.classList.remove('show');
         modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('show'); };
 
-        // Gender Selection
         function setupGenderSelection() {
             const genderOptions = document.querySelectorAll('.gender-option');
             genderOptions.forEach(opt => {
