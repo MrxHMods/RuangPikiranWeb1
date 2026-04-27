@@ -3,7 +3,7 @@ import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWith
 import { getFirestore, enableIndexedDbPersistence, collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
 // ============ AUTO CACHE CONTROL ============
-const CACHE_VERSION = '1.0.2';
+const CACHE_VERSION = '1.0.3';
 const CACHE_EXPIRY_DAYS = 7;
 const MAX_CACHE_ENTRIES = 500;
 
@@ -99,6 +99,7 @@ function optimizeCache() {
 function clearAllCaches() {
     localStorage.removeItem('rp_cache');
     localStorage.removeItem('rp_cache_metadata');
+    localStorage.removeItem('rp_read_notifications');
     console.log('🗑️ All caches cleared');
 }
 
@@ -317,14 +318,12 @@ function drawRain() {
     
     ctx.clearRect(0, 0, width, height);
     
-    // Ambient mist gradient at the bottom
     const mistGradient = ctx.createLinearGradient(0, height * 0.75, 0, height);
     mistGradient.addColorStop(0, 'rgba(79, 70, 229, 0)');
     mistGradient.addColorStop(1, 'rgba(79, 70, 229, 0.015)');
     ctx.fillStyle = mistGradient;
     ctx.fillRect(0, 0, width, height);
     
-    // Update and draw splash particles
     for (let i = splashes.length - 1; i >= 0; i--) {
         const splash = splashes[i];
         splash.life -= splash.decay;
@@ -353,7 +352,6 @@ function drawRain() {
         ctx.fill();
     }
     
-    // Draw mist particles
     for (let i = mistParticles.length - 1; i >= 0; i--) {
         const mist = mistParticles[i];
         mist.life -= 0.004;
@@ -372,20 +370,17 @@ function drawRain() {
         ctx.fill();
     }
     
-    // Draw raindrops
     const time = Date.now();
     
     for (let i = 0; i < drops.length; i++) {
         const drop = drops[i];
         
-        // Wobble effect
         const wobbleX = Math.sin(time * drop.wobbleSpeed + drop.wobbleOffset) * drop.wobble;
         const x = drop.x + wobbleX;
         const y = drop.y;
         const fullLength = drop.length;
         const trailLength = fullLength * 0.4;
         
-        // Main drop body
         const dropGradient = ctx.createLinearGradient(x, y, x, y + fullLength);
         const alpha = drop.opacity;
         dropGradient.addColorStop(0, `rgba(200, 215, 255, ${alpha * 0.2})`);
@@ -401,7 +396,6 @@ function drawRain() {
         ctx.lineCap = 'round';
         ctx.stroke();
         
-        // Trail behind drop (fading)
         const trailGradient = ctx.createLinearGradient(x, y - trailLength, x, y);
         trailGradient.addColorStop(0, `rgba(160, 190, 240, 0)`);
         trailGradient.addColorStop(1, `rgba(180, 200, 245, ${alpha * 0.25})`);
@@ -413,7 +407,6 @@ function drawRain() {
         ctx.lineWidth = drop.width * 0.7;
         ctx.stroke();
         
-        // Glow for brighter drops
         if (drop.opacity > 0.28) {
             ctx.beginPath();
             ctx.moveTo(x, y + 2);
@@ -423,11 +416,9 @@ function drawRain() {
             ctx.stroke();
         }
         
-        // Move drop
         drop.y += drop.speed;
         drop.x += drop.windDrift;
         
-        // Impact on ground
         if (drop.y > height) {
             const newSplashes = createSplash(drop.x, height, drop.speed);
             splashes.push(...newSplashes);
@@ -448,12 +439,10 @@ function drawRain() {
             }
         }
         
-        // Wrap around horizontally
         if (drop.x > width + 20) drop.x = -20;
         if (drop.x < -20) drop.x = width + 20;
     }
     
-    // Limit particles
     if (splashes.length > 100) splashes.splice(0, splashes.length - 100);
     if (mistParticles.length > 80) mistParticles.splice(0, mistParticles.length - 80);
     
@@ -498,11 +487,167 @@ let unsub = null;
 let userProfile = { displayName: '', gender: '', photoURL: '' };
 let lastOfflineToast = null;
 
+// Notification variables
+let notifications = [];
+let unreadNotifications = [];
+let notificationListener = null;
+
 const today = () => new Date().toISOString().split('T')[0];
 const moodEmoji = (m) => {
     const emojis = {1:"😭",2:"😞",3:"😟",4:"🙁",5:"😐",6:"🙂",7:"😊",8:"😃",9:"😍",10:"🤩"};
     return emojis[m] || "😐";
 };
+
+// ============ NOTIFICATION SYSTEM ============
+function loadNotifications() {
+    if (!currentUser) return;
+    
+    if (notificationListener) notificationListener();
+    
+    const notifRef = collection(db, 'global_notifications');
+    const q = query(notifRef, orderBy('timestamp', 'desc'), limit(50));
+    
+    notificationListener = onSnapshot(q, (snap) => {
+        notifications = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        
+        const readIds = JSON.parse(localStorage.getItem('rp_read_notifications') || '[]');
+        unreadNotifications = notifications.filter(n => !readIds.includes(n.id));
+        
+        updateNotificationBadge();
+        showLatestNotification();
+    }, (error) => {
+        console.error("Notification load error:", error);
+    });
+}
+
+function updateNotificationBadge() {
+    const badge = document.getElementById('notificationBadge');
+    const bell = document.getElementById('notificationBell');
+    if (!badge || !bell) return;
+    
+    if (unreadNotifications.length > 0) {
+        badge.style.display = 'flex';
+        badge.textContent = unreadNotifications.length > 99 ? '99+' : unreadNotifications.length;
+        bell.classList.add('has-unread');
+    } else {
+        badge.style.display = 'none';
+        bell.classList.remove('has-unread');
+    }
+}
+
+function showLatestNotification() {
+    const banner = document.getElementById('notificationBanner');
+    if (!banner) return;
+    
+    const readIds = JSON.parse(localStorage.getItem('rp_read_notifications') || '[]');
+    const latestUnread = notifications.find(n => !readIds.includes(n.id));
+    
+    if (latestUnread) {
+        const icon = document.getElementById('notificationIcon');
+        const title = document.getElementById('notificationTitle');
+        const message = document.getElementById('notificationMessage');
+        const date = document.getElementById('notificationDate');
+        
+        const type = latestUnread.type || 'info';
+        const icons = {
+            urgent: 'emergency',
+            warning: 'warning',
+            info: 'info',
+            success: 'check_circle',
+            announcement: 'campaign'
+        };
+        
+        if (icon) icon.textContent = icons[type] || 'campaign';
+        
+        banner.className = `notification-banner ${type}`;
+        if (title) title.textContent = latestUnread.title || 'Notifikasi';
+        if (message) message.textContent = latestUnread.message || '';
+        if (date) {
+            const notifDate = new Date(latestUnread.timestamp);
+            date.textContent = notifDate.toLocaleDateString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        banner.style.display = 'block';
+    } else {
+        banner.style.display = 'none';
+    }
+}
+
+function markNotificationAsRead(notifId) {
+    const readIds = JSON.parse(localStorage.getItem('rp_read_notifications') || '[]');
+    if (!readIds.includes(notifId)) {
+        readIds.push(notifId);
+        localStorage.setItem('rp_read_notifications', JSON.stringify(readIds));
+    }
+    unreadNotifications = notifications.filter(n => !readIds.includes(n.id));
+    updateNotificationBadge();
+    showLatestNotification();
+    renderNotificationList();
+}
+
+function markAllNotificationsAsRead() {
+    const allIds = notifications.map(n => n.id);
+    localStorage.setItem('rp_read_notifications', JSON.stringify(allIds));
+    unreadNotifications = [];
+    updateNotificationBadge();
+    showLatestNotification();
+    renderNotificationList();
+}
+
+function renderNotificationList() {
+    const container = document.getElementById('notificationList');
+    if (!container) return;
+    
+    const readIds = JSON.parse(localStorage.getItem('rp_read_notifications') || '[]');
+    
+    if (notifications.length === 0) {
+        container.innerHTML = `
+            <div class="notification-empty">
+                <span class="material-symbols-rounded">notifications_off</span>
+                <p>Belum ada notifikasi</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = `
+        ${notifications.map(n => {
+            const isUnread = !readIds.includes(n.id);
+            const type = n.type || 'info';
+            const date = new Date(n.timestamp);
+            
+            return `
+                <div class="notification-item ${type} ${isUnread ? 'unread' : ''}" onclick="window.markNotificationAsRead('${n.id}')">
+                    <div class="notification-item-title">${n.title || 'Notifikasi'}</div>
+                    <div class="notification-item-message">${n.message || ''}</div>
+                    <div class="notification-item-date">
+                        ${date.toLocaleDateString('id-ID', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}
+                    </div>
+                </div>
+            `;
+        }).join('')}
+        <div class="notification-actions">
+            <button class="btn-mark-read" onclick="event.stopPropagation(); window.markAllNotificationsAsRead();">
+                <span class="material-symbols-rounded">done_all</span>
+                Tandai Semua Dibaca
+            </button>
+        </div>
+    `;
+}
 
 // ============ ERROR HANDLING FUNCTIONS ============
 function showError(msg, code = '') {
@@ -580,6 +725,7 @@ window.addEventListener('online', () => {
     updateSync();
     if(currentUser) {
         loadData();
+        loadNotifications();
         showToast('success', 'Koneksi pulih. Data disinkronkan.', 'Online');
     }
 });
@@ -791,6 +937,31 @@ document.getElementById('cancelPhotoBtn').onclick = () => {
     document.getElementById('editPhotoModal').classList.remove('show');
 };
 
+// ============ NOTIFICATION EVENT LISTENERS ============
+document.getElementById('notificationBell').addEventListener('click', () => {
+    const modal = document.getElementById('notificationModal');
+    renderNotificationList();
+    modal.classList.add('show');
+});
+
+document.getElementById('closeNotificationModal').addEventListener('click', () => {
+    document.getElementById('notificationModal').classList.remove('show');
+});
+
+document.getElementById('notificationModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('notificationModal')) {
+        document.getElementById('notificationModal').classList.remove('show');
+    }
+});
+
+document.getElementById('notificationCloseBtn').addEventListener('click', () => {
+    const readIds = JSON.parse(localStorage.getItem('rp_read_notifications') || '[]');
+    const latestUnread = notifications.find(n => !readIds.includes(n.id));
+    if (latestUnread) {
+        markNotificationAsRead(latestUnread.id);
+    }
+});
+
 // ============ CONFIRMATION HELPER ============
 function confirmAction(message) {
     return new Promise(resolve => {
@@ -825,7 +996,6 @@ document.getElementById('showLogin').onclick = () => {
     document.getElementById('errorMessage')?.classList.remove('show');
 };
 
-// Login Handler
 document.getElementById('loginBtn').onclick = async () => {
     const email = document.getElementById('loginEmail').value.trim();
     const pass = document.getElementById('loginPassword').value;
@@ -862,7 +1032,6 @@ document.getElementById('loginBtn').onclick = async () => {
     }
 };
 
-// Register Handler
 document.getElementById('registerBtn').onclick = async () => {
     const email = document.getElementById('registerEmail').value.trim();
     const pass = document.getElementById('registerPassword').value;
@@ -914,13 +1083,13 @@ document.getElementById('registerBtn').onclick = async () => {
     }
 };
 
-// Logout Handler
 document.getElementById('logoutBtn').onclick = async () => {
     const confirmed = await confirmAction('Apakah Anda yakin ingin keluar?');
     
     if (confirmed) {
         try {
             if(unsub) unsub();
+            if(notificationListener) notificationListener();
             await signOut(auth);
             showToast('info', 'Anda telah keluar', 'Logout');
         } catch(err) {
@@ -1195,7 +1364,6 @@ document.getElementById('darkIntensity').oninput = function() {
     document.getElementById('intensityLabel').textContent = this.value;
 };
 
-// Save Journal Handler
 document.getElementById('saveJournalBtn').onclick = async () => {
     const text = document.getElementById('journalText').value.trim();
     if(!text) {
@@ -1273,7 +1441,6 @@ document.getElementById('exportBtn').onclick = () => {
     }
 };
 
-// Copy to clipboard handler
 document.getElementById('copyBtn').onclick = async () => {
     const text = entries.map(e => `📅 ${e.date}\nMood: ${e.mood}/10\n${e.text}`).join('\n---\n');
     try {
@@ -1284,7 +1451,6 @@ document.getElementById('copyBtn').onclick = async () => {
     }
 };
 
-// Clear cache handler
 document.getElementById('clearLocalCacheBtn').onclick = async () => {
     const confirmed = await confirmAction('Hapus cache lokal? Data akan disinkronkan ulang dari cloud.');
     
@@ -1354,6 +1520,7 @@ onAuthStateChanged(auth, async (user) => {
         updateSync();
         await loadUserProfile();
         loadData();
+        loadNotifications();
         renderProfile();
         showTab('dashboard');
     } else {
@@ -1361,7 +1528,9 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('loginPage').style.display = 'flex';
         document.getElementById('mainApp').classList.remove('show');
         if(unsub) unsub();
+        if(notificationListener) notificationListener();
         entries = [];
+        notifications = [];
         if(chart) {
             chart.destroy();
             chart = null;
@@ -1375,3 +1544,6 @@ updateSync();
 // ============ EXPORT FUNCTIONS ============
 window.showToast = showToast;
 window.clearAllCaches = clearAllCaches;
+window.markNotificationAsRead = markNotificationAsRead;
+window.markAllNotificationsAsRead = markAllNotificationsAsRead;
+window.renderNotificationList = renderNotificationList;
