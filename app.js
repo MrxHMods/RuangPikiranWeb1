@@ -211,6 +211,7 @@ let chart = null;
 let currentPeriod = 7;
 let unsub = null;
 let userProfile = { displayName: '', gender: '', photoURL: '' };
+let lastOfflineToast = null;
 
 const today = () => new Date().toISOString().split('T')[0];
 const moodEmoji = (m) => {
@@ -218,33 +219,92 @@ const moodEmoji = (m) => {
     return emojis[m] || "😐";
 };
 
-function showError(msg) {
+// ============ ERROR HANDLING FUNCTIONS ============
+function showError(msg, code = '') {
     const el = document.getElementById('errorMessage');
-    el.textContent = '❌ ' + msg;
+    if (!el) return;
+    const fullMessage = code ? `${msg} (Kode: ${code})` : msg;
+    el.textContent = '❌ ' + fullMessage;
     el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 4000);
-    showToast('error', msg);
+    setTimeout(() => el.classList.remove('show'), 5000);
+    showToast('error', fullMessage);
+}
+
+function getFirebaseErrorMessage(error) {
+    const errorMap = {
+        // Auth errors
+        'auth/invalid-email': 'Format email tidak valid',
+        'auth/user-disabled': 'Akun ini telah dinonaktifkan. Hubungi dukungan',
+        'auth/user-not-found': 'Email belum terdaftar. Silakan daftar terlebih dahulu',
+        'auth/wrong-password': 'Password salah. Silakan coba lagi',
+        'auth/invalid-credential': 'Email atau password salah',
+        'auth/email-already-in-use': 'Email sudah terdaftar. Gunakan email lain atau masuk',
+        'auth/operation-not-allowed': 'Metode login ini belum diaktifkan',
+        'auth/weak-password': 'Password terlalu lemah. Gunakan minimal 6 karakter',
+        'auth/too-many-requests': 'Terlalu banyak percobaan. Silakan coba lagi nanti',
+        'auth/network-request-failed': 'Gangguan jaringan. Periksa koneksi internet Anda',
+        'auth/requires-recent-login': 'Silakan login ulang untuk melanjutkan',
+        'auth/account-exists-with-different-credential': 'Email sudah terdaftar dengan metode lain',
+        
+        // Firestore errors
+        'unavailable': 'Layanan sedang sibuk. Menggunakan data lokal',
+        'resource-exhausted': 'Server sibuk. Data disimpan sementara secara lokal',
+        'permission-denied': 'Anda tidak memiliki izin untuk akses ini',
+        'not-found': 'Data tidak ditemukan',
+        'already-exists': 'Data sudah ada',
+        'cancelled': 'Operasi dibatalkan',
+        'deadline-exceeded': 'Waktu koneksi habis. Coba lagi',
+        'unauthenticated': 'Silakan login terlebih dahulu'
+    };
+    
+    return errorMap[error.code] || error.message || 'Terjadi kesalahan yang tidak diketahui';
+}
+
+// ============ CONNECTION CHECK ============
+function isOnline() {
+    if (!navigator.onLine) {
+        showToast('warning', 'Anda sedang offline. Periksa koneksi internet Anda.', 'Offline');
+        return false;
+    }
+    return true;
 }
 
 // ============ SYNC INDICATOR ============
 function updateSync() {
     const indicator = document.getElementById('syncIndicator');
     const banner = document.getElementById('offlineBanner');
+    
+    if (!indicator || !banner) return;
+    
     if(navigator.onLine) {
         indicator.className = 'sync-indicator online';
         indicator.innerHTML = '<span class="material-symbols-rounded" style="font-size:12px;vertical-align:middle;margin-right:4px;">cloud_done</span> Online';
         banner.classList.remove('show');
-        showToast('success', 'Koneksi pulih', 'Online');
+        if(lastOfflineToast) {
+            lastOfflineToast.remove();
+            lastOfflineToast = null;
+        }
     } else {
         indicator.className = 'sync-indicator offline';
         indicator.innerHTML = '<span class="material-symbols-rounded" style="font-size:12px;vertical-align:middle;margin-right:4px;">cloud_off</span> Offline';
         banner.classList.add('show');
-        showToast('warning', 'Anda sedang offline', 'Offline');
+        if(!lastOfflineToast) {
+            lastOfflineToast = showToast('warning', 'Anda sedang offline. Data akan disimpan lokal.', 'Offline');
+        }
     }
 }
 
-window.addEventListener('online', updateSync);
-window.addEventListener('offline', updateSync);
+window.addEventListener('online', () => {
+    updateSync();
+    if(currentUser) {
+        loadData();
+        showToast('success', 'Koneksi pulih. Data disinkronkan.', 'Online');
+    }
+});
+
+window.addEventListener('offline', () => {
+    updateSync();
+});
 
 // ============ USER PROFILE ============
 async function loadUserProfile() {
@@ -259,16 +319,7 @@ async function loadUserProfile() {
             await saveUserProfile();
         }
     } catch(e) {
-        console.log("Offline mode");
-        // Load from localStorage if available
-        const localProfile = localStorage.getItem('rp_user_profile');
-        if (localProfile) {
-            try {
-                userProfile = JSON.parse(localProfile);
-            } catch(e) {
-                userProfile = { displayName: currentUser.email?.split('@')[0] || 'Pengguna', gender: '', photoURL: '' };
-            }
-        }
+        console.log("Offline mode - using cached profile");
     }
     updateDisplayName();
     renderProfilePhoto();
@@ -283,18 +334,18 @@ async function saveUserProfile() {
         if(userProfile.displayName) {
             try { await updateProfile(currentUser, { displayName: userProfile.displayName }); } catch(e) {}
         }
-        // Save to localStorage for offline access
-        localStorage.setItem('rp_user_profile', JSON.stringify(userProfile));
     } catch(e) {
-        // Save locally if offline
-        localStorage.setItem('rp_user_profile', JSON.stringify(userProfile));
+        console.log("Failed to save profile:", e);
+        showToast('warning', 'Profil disimpan lokal. Akan sync saat online.', 'Offline');
     }
 }
 
 function updateDisplayName() {
     const name = userProfile.displayName || currentUser?.email?.split('@')[0] || 'Pengguna';
-    document.getElementById('userDisplay').textContent = name;
-    document.getElementById('profileDisplayName').textContent = name;
+    const userDisplayEl = document.getElementById('userDisplay');
+    const profileDisplayNameEl = document.getElementById('profileDisplayName');
+    if (userDisplayEl) userDisplayEl.textContent = name;
+    if (profileDisplayNameEl) profileDisplayNameEl.textContent = name;
 }
 
 // ============ PROFILE PHOTO FUNCTIONS ============
@@ -305,37 +356,21 @@ function renderProfilePhoto() {
     const photoPreviewIcon = document.getElementById('photoPreviewIcon');
     
     if (userProfile.photoURL && userProfile.photoURL.trim() !== '') {
-        // Tampilkan gambar
         if (avatarImg) {
             avatarImg.src = userProfile.photoURL;
             avatarImg.style.display = 'block';
-            avatarIcon.style.display = 'none';
-            // Fallback jika gambar gagal dimuat
-            avatarImg.onerror = () => {
-                avatarImg.style.display = 'none';
-                avatarIcon.style.display = 'flex';
-            };
         }
+        if (avatarIcon) avatarIcon.style.display = 'none';
         if (photoPreview) {
             photoPreview.src = userProfile.photoURL;
             photoPreview.style.display = 'block';
-            if (photoPreviewIcon) photoPreviewIcon.style.display = 'none';
-            // Fallback
-            photoPreview.onerror = () => {
-                photoPreview.style.display = 'none';
-                if (photoPreviewIcon) photoPreviewIcon.style.display = 'flex';
-            };
         }
+        if (photoPreviewIcon) photoPreviewIcon.style.display = 'none';
     } else {
-        // Tampilkan icon default
-        if (avatarImg) {
-            avatarImg.style.display = 'none';
-            avatarIcon.style.display = 'flex';
-        }
-        if (photoPreview) {
-            photoPreview.style.display = 'none';
-            if (photoPreviewIcon) photoPreviewIcon.style.display = 'flex';
-        }
+        if (avatarImg) avatarImg.style.display = 'none';
+        if (avatarIcon) avatarIcon.style.display = 'flex';
+        if (photoPreview) photoPreview.style.display = 'none';
+        if (photoPreviewIcon) photoPreviewIcon.style.display = 'flex';
     }
 }
 
@@ -355,7 +390,6 @@ async function removeProfilePhoto() {
     showToast('success', 'Foto profil berhasil dihapus');
 }
 
-// Preview image from URL
 function previewPhotoFromUrl(url) {
     const photoPreview = document.getElementById('photoPreview');
     const photoPreviewIcon = document.getElementById('photoPreviewIcon');
@@ -363,16 +397,10 @@ function previewPhotoFromUrl(url) {
     if (url && url.trim() !== '') {
         photoPreview.src = url;
         photoPreview.style.display = 'block';
-        photoPreviewIcon.style.display = 'none';
-        // Fallback
-        photoPreview.onerror = () => {
-            photoPreview.style.display = 'none';
-            photoPreviewIcon.style.display = 'flex';
-            showToast('error', 'URL gambar tidak valid atau tidak dapat diakses');
-        };
+        if (photoPreviewIcon) photoPreviewIcon.style.display = 'none';
     } else {
         photoPreview.style.display = 'none';
-        photoPreviewIcon.style.display = 'flex';
+        if (photoPreviewIcon) photoPreviewIcon.style.display = 'flex';
     }
 }
 
@@ -431,15 +459,12 @@ document.getElementById('cancelGenderBtn').onclick = () => {
 
 // ============ PHOTO MODAL HANDLERS ============
 document.getElementById('editPhotoBtn').onclick = () => {
-    // Reset preview
     const photoPreview = document.getElementById('photoPreview');
     const photoPreviewIcon = document.getElementById('photoPreviewIcon');
     const photoUrlInput = document.getElementById('photoUrlInput');
     
-    // Clear input
     photoUrlInput.value = '';
     
-    // Show current photo as preview
     if (userProfile.photoURL && userProfile.photoURL.trim() !== '') {
         photoPreview.src = userProfile.photoURL;
         photoPreview.style.display = 'block';
@@ -452,7 +477,6 @@ document.getElementById('editPhotoBtn').onclick = () => {
     document.getElementById('editPhotoModal').classList.add('show');
 };
 
-// Preview URL when typing
 document.getElementById('photoUrlInput').addEventListener('input', (e) => {
     previewPhotoFromUrl(e.target.value);
 });
@@ -461,7 +485,6 @@ document.getElementById('savePhotoBtn').onclick = async () => {
     const urlInput = document.getElementById('photoUrlInput').value.trim();
     
     if (urlInput) {
-        // Validate URL format
         try {
             new URL(urlInput);
             await updateProfilePhoto(urlInput);
@@ -475,116 +498,158 @@ document.getElementById('savePhotoBtn').onclick = async () => {
 };
 
 document.getElementById('removePhotoBtn').onclick = async () => {
-    await removeProfilePhoto();
-    document.getElementById('editPhotoModal').classList.remove('show');
+    const confirmed = await confirmAction('Hapus foto profil?');
+    if (confirmed) {
+        await removeProfilePhoto();
+        document.getElementById('editPhotoModal').classList.remove('show');
+    }
 };
 
 document.getElementById('cancelPhotoBtn').onclick = () => {
     document.getElementById('editPhotoModal').classList.remove('show');
 };
 
-// Close modals when clicking overlay
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-            overlay.classList.remove('show');
-        }
-    });
-});
-
-// ============ AUTH HANDLERS ============
-document.getElementById('showRegister').onclick = () => {
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('registerForm').style.display = 'block';
-    document.getElementById('errorMessage').classList.remove('show');
-};
-
-document.getElementById('showLogin').onclick = () => {
-    document.getElementById('registerForm').style.display = 'none';
-    document.getElementById('loginForm').style.display = 'block';
-    document.getElementById('errorMessage').classList.remove('show');
-};
-
-// Handle Enter key for login
-document.getElementById('loginPassword').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') document.getElementById('loginBtn').click();
-});
-
-document.getElementById('loginBtn').onclick = async () => {
-    const email = document.getElementById('loginEmail').value.trim();
-    const pass = document.getElementById('loginPassword').value;
-    if(!email || !pass) return showError('Isi email dan password');
-    try {
-        const btn = document.getElementById('loginBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="material-symbols-rounded" style="animation: spin 1s linear infinite;">refresh</span> Masuk...';
-        
-        await signInWithEmailAndPassword(auth, email, pass);
-        showToast('success', 'Selamat datang kembali!');
-    } catch(err) {
-        if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-            showError('Email atau password salah');
-        } else if (err.code === 'auth/too-many-requests') {
-            showError('Terlalu banyak percobaan. Coba lagi nanti.');
-        } else {
-            showError('Gagal masuk. Periksa koneksi Anda.');
-        }
-    } finally {
-        const btn = document.getElementById('loginBtn');
-        btn.disabled = false;
-        btn.innerHTML = '<span class="material-symbols-rounded">login</span> Masuk';
-    }
-};
-
-document.getElementById('registerBtn').onclick = async () => {
-    const email = document.getElementById('registerEmail').value.trim();
-    const pass = document.getElementById('registerPassword').value;
-    const confirm = document.getElementById('registerConfirm').value;
-    if(!email || !pass) return showError('Isi semua field');
-    if(pass !== confirm) return showError('Password tidak cocok');
-    if(pass.length < 6) return showError('Password minimal 6 karakter');
-    try {
-        const btn = document.getElementById('registerBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="material-symbols-rounded" style="animation: spin 1s linear infinite;">refresh</span> Mendaftar...';
-        
-        await createUserWithEmailAndPassword(auth, email, pass);
-        showToast('success', 'Akun berhasil dibuat! Selamat datang.');
-    } catch(err) {
-        if (err.code === 'auth/email-already-in-use') {
-            showError('Email sudah terdaftar');
-        } else if (err.code === 'auth/weak-password') {
-            showError('Password terlalu lemah');
-        } else {
-            showError('Registrasi gagal. Coba lagi.');
-        }
-    } finally {
-        const btn = document.getElementById('registerBtn');
-        btn.disabled = false;
-        btn.innerHTML = '<span class="material-symbols-rounded">person_add</span> Daftar';
-    }
-};
-
-document.getElementById('logoutBtn').onclick = async () => {
-    const confirmed = await new Promise(resolve => {
-        const toast = showToast('warning', 'Apakah Anda yakin ingin keluar?', 'Konfirmasi');
+// ============ CONFIRMATION HELPER ============
+function confirmAction(message) {
+    return new Promise(resolve => {
+        const toast = showToast('warning', message, 'Konfirmasi');
         toast.style.cursor = 'pointer';
-        toast.onclick = () => {
-            toast.remove();
-            resolve(true);
-        };
-        setTimeout(() => {
+        
+        const timeout = setTimeout(() => {
             if (toast.parentNode) {
                 toast.remove();
                 resolve(false);
             }
         }, 5000);
+        
+        toast.onclick = () => {
+            clearTimeout(timeout);
+            toast.remove();
+            resolve(true);
+        };
     });
+}
+
+// ============ AUTH HANDLERS ============
+document.getElementById('showRegister').onclick = () => {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'block';
+    document.getElementById('errorMessage')?.classList.remove('show');
+};
+
+document.getElementById('showLogin').onclick = () => {
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'block';
+    document.getElementById('errorMessage')?.classList.remove('show');
+};
+
+// Login Handler
+document.getElementById('loginBtn').onclick = async () => {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass = document.getElementById('loginPassword').value;
+    
+    // Validasi input
+    if(!email || !pass) {
+        showError('Isi email dan password');
+        return;
+    }
+    
+    // Validasi format email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if(!emailRegex.test(email)) {
+        showError('Format email tidak valid');
+        return;
+    }
+    
+    // Cek koneksi
+    if(!isOnline()) return;
+    
+    const loginBtn = document.getElementById('loginBtn');
+    const originalHTML = loginBtn.innerHTML;
+    
+    try {
+        // Loading state
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<span class="material-symbols-rounded">hourglass_top</span> Memproses...';
+        
+        await signInWithEmailAndPassword(auth, email, pass);
+        showToast('success', 'Selamat datang kembali!', 'Berhasil');
+        document.getElementById('errorMessage')?.classList.remove('show');
+    } catch(err) {
+        const errorMessage = getFirebaseErrorMessage(err);
+        showError(errorMessage, err.code);
+    } finally {
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = originalHTML;
+    }
+};
+
+// Register Handler
+document.getElementById('registerBtn').onclick = async () => {
+    const email = document.getElementById('registerEmail').value.trim();
+    const pass = document.getElementById('registerPassword').value;
+    const confirm = document.getElementById('registerConfirm').value;
+    
+    // Validasi input
+    if(!email || !pass) {
+        showError('Isi semua field');
+        return;
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if(!emailRegex.test(email)) {
+        showError('Format email tidak valid');
+        return;
+    }
+    
+    if(pass !== confirm) {
+        showError('Password tidak cocok');
+        return;
+    }
+    
+    if(pass.length < 6) {
+        showError('Password minimal 6 karakter');
+        return;
+    }
+    
+    if(!isOnline()) return;
+    
+    const registerBtn = document.getElementById('registerBtn');
+    const originalHTML = registerBtn.innerHTML;
+    
+    try {
+        registerBtn.disabled = true;
+        registerBtn.innerHTML = '<span class="material-symbols-rounded">hourglass_top</span> Mendaftar...';
+        
+        await createUserWithEmailAndPassword(auth, email, pass);
+        showToast('success', 'Akun berhasil dibuat! Selamat datang.', 'Registrasi Berhasil');
+        document.getElementById('errorMessage')?.classList.remove('show');
+        
+        // Reset form
+        document.getElementById('registerEmail').value = '';
+        document.getElementById('registerPassword').value = '';
+        document.getElementById('registerConfirm').value = '';
+    } catch(err) {
+        const errorMessage = getFirebaseErrorMessage(err);
+        showError(errorMessage, err.code);
+    } finally {
+        registerBtn.disabled = false;
+        registerBtn.innerHTML = originalHTML;
+    }
+};
+
+// Logout Handler
+document.getElementById('logoutBtn').onclick = async () => {
+    const confirmed = await confirmAction('Apakah Anda yakin ingin keluar?');
     
     if (confirmed) {
-        if(unsub) unsub();
-        await signOut(auth);
-        showToast('info', 'Anda telah keluar');
+        try {
+            if(unsub) unsub();
+            await signOut(auth);
+            showToast('info', 'Anda telah keluar', 'Logout');
+        } catch(err) {
+            showToast('error', 'Gagal keluar. Coba lagi.', 'Error');
+        }
     }
 };
 
@@ -596,6 +661,7 @@ function loadData() {
     const ref = collection(db, 'users', currentUser.uid, 'journal_entries');
     const q = query(ref, orderBy('timestamp', 'desc'), limit(200));
     if(unsub) unsub();
+    
     unsub = onSnapshot(q, (snap) => {
         entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         localStorage.setItem('rp_cache', JSON.stringify(entries));
@@ -604,37 +670,45 @@ function loadData() {
         renderProfile();
         if(!document.getElementById('historyPanel').classList.contains('hidden')) renderHistory();
     }, (error) => {
-        console.log("Offline mode, loading from cache");
+        console.error("Firestore error:", error);
         entries = JSON.parse(localStorage.getItem('rp_cache') || '[]');
         renderDashboard();
         renderProfile();
-        if(!document.getElementById('historyPanel').classList.contains('hidden')) renderHistory();
+        
+        const errorMessage = getFirebaseErrorMessage(error);
+        showToast('warning', errorMessage, 'Sinkronisasi');
     });
 }
 
 async function saveEntry(entry) {
-    if(currentUser) {
-        try {
-            await setDoc(doc(db, 'users', currentUser.uid, 'journal_entries', entry.id.toString()), entry);
-        } catch(e) {
-            // Save locally if offline
-            const localEntries = JSON.parse(localStorage.getItem('rp_cache') || '[]');
-            const index = localEntries.findIndex(e => e.id === entry.id);
-            if(index !== -1) {
-                localEntries[index] = entry;
-            } else {
-                localEntries.unshift(entry);
-            }
-            localStorage.setItem('rp_cache', JSON.stringify(localEntries));
+    if(!currentUser) return;
+    
+    try {
+        await setDoc(doc(db, 'users', currentUser.uid, 'journal_entries', entry.id.toString()), entry);
+    } catch(err) {
+        console.error("Save error:", err);
+        
+        // Simpan ke localStorage sebagai backup
+        const cacheEntries = JSON.parse(localStorage.getItem('rp_cache') || '[]');
+        const index = cacheEntries.findIndex(e => e.id === entry.id);
+        if(index !== -1) {
+            cacheEntries[index] = entry;
+        } else {
+            cacheEntries.unshift(entry);
         }
+        localStorage.setItem('rp_cache', JSON.stringify(cacheEntries));
+        
+        showToast('warning', 'Jurnal disimpan lokal. Akan sync saat online.', 'Offline');
     }
 }
 
 // ============ RENDER FUNCTIONS ============
 function renderDashboard() {
     const todayEntry = entries.find(e => e.date === today());
+    const todayInsightEl = document.getElementById('todayInsight');
+    
     if(todayEntry) {
-        document.getElementById('todayInsight').innerHTML = `
+        todayInsightEl.innerHTML = `
             <div style="background:var(--bg);padding:16px;border-radius:12px;">
                 <div style="font-size:1.3rem;font-weight:bold;">${moodEmoji(todayEntry.mood)} Mood: ${todayEntry.mood}/10</div>
                 <div>⚡ Energi: ${todayEntry.energy}/10</div>
@@ -642,28 +716,33 @@ function renderDashboard() {
             </div>
         `;
     } else {
-        document.getElementById('todayInsight').innerHTML = '<div style="padding:20px;text-align:center;">✨ Belum ada jurnal hari ini. Yuk tulis!</div>';
+        todayInsightEl.innerHTML = '<div style="padding:20px;text-align:center;">✨ Belum ada jurnal hari ini. Yuk tulis!</div>';
     }
     
     const last7 = entries.slice(0, 7);
+    const aiSummaryEl = document.getElementById('aiSummary');
+    const darkTrackerEl = document.getElementById('darkTracker');
+    
     if(last7.length > 0) {
         const avgMood = (last7.reduce((s, e) => s + e.mood, 0) / last7.length).toFixed(1);
         const darkDays = last7.filter(e => e.dark?.selfHarm || e.dark?.hopeless).length;
-        document.getElementById('aiSummary').innerHTML = `
+        
+        aiSummaryEl.innerHTML = `
             <strong>🧠 7 Hari Terakhir:</strong><br>
             • Mood rata-rata: <strong>${avgMood}/10</strong><br>
             • ${darkDays} hari dengan pikiran gelap<br>
             ${darkDays >= 3 ? '⚠️ Pertimbangkan konsultasi profesional.' : darkDays > 0 ? '💡 Ada pikiran gelap, jangan ragu cerita ke orang terpercaya.' : '🌟 Mood cukup stabil, pertahankan!'}
         `;
+        
+        darkTrackerEl.innerHTML = last7.map(e => `
+            <div style="padding:10px;margin:5px 0;background:${(e.dark?.selfHarm || e.dark?.hopeless) ? 'var(--danger-soft)' : 'var(--secondary-soft)'};border-radius:8px;">
+                <strong>${e.date}</strong>: ${(e.dark?.selfHarm || e.dark?.hopeless) ? '⚠️ Pikiran gelap terdeteksi' : '✅ Aman'}
+            </div>
+        `).join('');
     } else {
-        document.getElementById('aiSummary').innerHTML = 'Belum ada data jurnal. Mulai tulis ya!';
+        aiSummaryEl.innerHTML = 'Belum ada data jurnal. Mulai tulis ya!';
+        darkTrackerEl.innerHTML = 'Belum ada data.';
     }
-    
-    document.getElementById('darkTracker').innerHTML = last7.length ? last7.map(e => `
-        <div style="padding:10px;margin:5px 0;background:${(e.dark?.selfHarm || e.dark?.hopeless) ? 'var(--danger-soft)' : 'var(--secondary-soft)'};border-radius:8px;">
-            <strong>${e.date}</strong>: ${(e.dark?.selfHarm || e.dark?.hopeless) ? '⚠️ Pikiran gelap terdeteksi' : '✅ Aman'}
-        </div>
-    `).join('') : 'Belum ada data.';
 }
 
 function renderHistory() {
@@ -671,12 +750,14 @@ function renderHistory() {
     let filtered = filterDate ? entries.filter(e => e.date === filterDate) : [...entries];
     filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
     
+    const historyListEl = document.getElementById('historyList');
+    
     if(filtered.length === 0) {
-        document.getElementById('historyList').innerHTML = '<p style="text-align:center;padding:20px;">Tidak ada jurnal.</p>';
+        historyListEl.innerHTML = '<p style="text-align:center;padding:20px;">Tidak ada jurnal.</p>';
         return;
     }
     
-    document.getElementById('historyList').innerHTML = filtered.map(e => `
+    historyListEl.innerHTML = filtered.map(e => `
         <div class="history-item">
             <button class="delete-btn" data-id="${e.id}">
                 <span class="material-symbols-rounded">delete</span> Hapus
@@ -688,29 +769,16 @@ function renderHistory() {
         </div>
     `).join('');
     
+    // Delete handlers
     document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.onclick = async () => {
-            const confirmed = await new Promise(resolve => {
-                const toast = showToast('warning', 'Hapus jurnal ini? Tindakan tidak dapat dibatalkan.', 'Konfirmasi Hapus');
-                toast.style.cursor = 'pointer';
-                toast.onclick = () => {
-                    toast.remove();
-                    resolve(true);
-                };
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.remove();
-                        resolve(false);
-                    }
-                }, 5000);
-            });
-            
+            const confirmed = await confirmAction('Hapus jurnal ini? Tindakan tidak dapat dibatalkan.');
             if (confirmed) {
                 try {
                     await deleteDoc(doc(db, 'users', currentUser.uid, 'journal_entries', btn.dataset.id));
                     showToast('success', 'Jurnal berhasil dihapus');
-                } catch(e) {
-                    showToast('error', 'Gagal menghapus jurnal');
+                } catch(err) {
+                    showToast('error', 'Gagal menghapus jurnal. Coba lagi.');
                 }
             }
         };
@@ -720,6 +788,7 @@ function renderHistory() {
 function renderAnalytics() {
     const days = currentPeriod;
     const lastDays = [];
+    
     for(let i = days - 1; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
@@ -744,66 +813,29 @@ function renderAnalytics() {
     const ctx = document.getElementById('moodChart').getContext('2d');
     if(chart) chart.destroy();
     const isDark = document.documentElement.classList.contains('dark');
-    chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: lastDays.map(d => new Date(d.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })),
-            datasets: [
-                { 
-                    label: 'Mood', 
-                    data: lastDays.map(d => d.mood), 
-                    borderColor: '#6366f1', 
-                    backgroundColor: 'rgba(99,102,241,0.1)', 
-                    tension: 0.3, 
-                    fill: true,
-                    pointBackgroundColor: '#6366f1',
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                },
-                { 
-                    label: 'Energi', 
-                    data: lastDays.map(d => d.energy), 
-                    borderColor: '#f59e0b', 
-                    backgroundColor: 'rgba(245,158,11,0.1)', 
-                    tension: 0.3, 
-                    fill: true,
-                    pointBackgroundColor: '#f59e0b',
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    labels: {
-                        color: isDark ? '#94a3b8' : '#64748b'
-                    }
-                }
+    
+    try {
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: lastDays.map(d => new Date(d.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })),
+                datasets: [
+                    { label: 'Mood', data: lastDays.map(d => d.mood), borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,0.1)', tension: 0.3, fill: true },
+                    { label: 'Energi', data: lastDays.map(d => d.energy), borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', tension: 0.3, fill: true }
+                ]
             },
-            scales: {
-                y: { 
-                    min: 0, 
-                    max: 10, 
-                    ticks: { 
-                        color: isDark ? '#94a3b8' : '#64748b',
-                        stepSize: 1
-                    },
-                    grid: {
-                        color: isDark ? 'rgba(148,163,184,0.1)' : 'rgba(0,0,0,0.1)'
-                    }
-                },
-                x: { 
-                    ticks: { color: isDark ? '#94a3b8' : '#64748b' },
-                    grid: {
-                        color: isDark ? 'rgba(148,163,184,0.1)' : 'rgba(0,0,0,0.1)'
-                    }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { min: 0, max: 10, ticks: { color: isDark ? '#94a3b8' : '#64748b' } },
+                    x: { ticks: { color: isDark ? '#94a3b8' : '#64748b' } }
                 }
             }
-        }
-    });
+        });
+    } catch(err) {
+        console.error("Chart error:", err);
+    }
     
     const darkDays = entries.slice(0, days).filter(e => e.dark?.selfHarm || e.dark?.hopeless).length;
     document.getElementById('negativeStats').innerHTML = `
@@ -817,30 +849,39 @@ function renderAnalytics() {
 function renderProfile() {
     if(!currentUser) return;
     updateDisplayName();
-    document.getElementById('profileGenderDisplay').textContent = userProfile.gender || 'Belum diisi';
-    document.getElementById('profileEmail').textContent = currentUser.email || '-';
-    document.getElementById('profileTotalEntries').textContent = `${entries.length} entri`;
+    
+    const profileGenderEl = document.getElementById('profileGenderDisplay');
+    const profileEmailEl = document.getElementById('profileEmail');
+    const profileTotalEntriesEl = document.getElementById('profileTotalEntries');
+    const profileAvgMoodEl = document.getElementById('profileAvgMood');
+    
+    if (profileGenderEl) profileGenderEl.textContent = userProfile.gender || 'Belum diisi';
+    if (profileEmailEl) profileEmailEl.textContent = currentUser.email || '-';
+    if (profileTotalEntriesEl) profileTotalEntriesEl.textContent = `${entries.length} entri`;
+    
     const avg = entries.length ? (entries.reduce((s, e) => s + e.mood, 0) / entries.length).toFixed(1) : '-';
-    document.getElementById('profileAvgMood').textContent = avg !== '-' ? `${moodEmoji(Math.round(avg))} ${avg}/10` : '-';
+    if (profileAvgMoodEl) {
+        profileAvgMoodEl.textContent = avg !== '-' ? `${moodEmoji(Math.round(avg))} ${avg}/10` : '-';
+    }
+    
     renderProfilePhoto();
 }
 
 function showTab(tabId) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
-    const targetPanel = document.getElementById(`${tabId}Panel`);
-    if (targetPanel) targetPanel.classList.remove('hidden');
-    
+    document.getElementById(`${tabId}Panel`).classList.remove('hidden');
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    const targetBtn = document.querySelector(`[data-tab="${tabId}"]`);
-    if (targetBtn) targetBtn.classList.add('active');
     
-    // Save active tab to localStorage
-    localStorage.setItem('rp_active_tab', tabId);
+    const activeBtn = document.querySelector(`[data-tab="${tabId}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
     
     if(tabId === 'history') renderHistory();
     if(tabId === 'analytics') renderAnalytics();
     if(tabId === 'dashboard') renderDashboard();
-    if(tabId === 'export') document.getElementById('exportPreview').innerHTML = `📝 ${entries.length} jurnal siap diekspor.`;
+    if(tabId === 'export') {
+        const exportPreviewEl = document.getElementById('exportPreview');
+        if (exportPreviewEl) exportPreviewEl.innerHTML = `📝 ${entries.length} jurnal siap diekspor.`;
+    }
     if(tabId === 'profile') renderProfile();
 }
 
@@ -859,13 +900,7 @@ document.querySelectorAll('.period-btn').forEach(btn => {
 });
 
 document.getElementById('thoughtTags').addEventListener('click', (e) => {
-    if(e.target.classList.contains('tag')) {
-        e.target.classList.toggle('selected');
-        // Haptic feedback for mobile
-        if (navigator.vibrate) {
-            navigator.vibrate(10);
-        }
-    }
+    if(e.target.classList.contains('tag')) e.target.classList.toggle('selected');
 });
 
 document.getElementById('moodSlider').oninput = function() {
@@ -880,6 +915,7 @@ document.getElementById('darkIntensity').oninput = function() {
     document.getElementById('intensityLabel').textContent = this.value;
 };
 
+// Save Journal Handler
 document.getElementById('saveJournalBtn').onclick = async () => {
     const text = document.getElementById('journalText').value.trim();
     if(!text) {
@@ -907,17 +943,13 @@ document.getElementById('saveJournalBtn').onclick = async () => {
         showToast('warning', 'Jurnal tersimpan. Jika Anda merasa sangat tertekan, jangan ragu untuk mencari bantuan profesional. 📞 119 ext 8', 'Perhatian');
     }
     
+    // Update local entries
     const existingIndex = entries.findIndex(e => e.date === today());
     if(existingIndex !== -1) entries[existingIndex] = entry;
     else entries.unshift(entry);
     
     await saveEntry(entry);
     showToast('success', 'Jurnal berhasil disimpan!');
-    
-    // Haptic feedback
-    if (navigator.vibrate) {
-        navigator.vibrate([50, 30, 50]);
-    }
     
     // Clear form
     document.getElementById('journalText').value = '';
@@ -934,24 +966,38 @@ document.getElementById('saveJournalBtn').onclick = async () => {
     showTab('dashboard');
 };
 
+// Other event listeners
 document.getElementById('quickMoodBtn').onclick = () => showTab('journal');
+
 document.getElementById('resetFilterBtn').onclick = () => {
     document.getElementById('filterDate').value = '';
     renderHistory();
 };
+
 document.getElementById('filterDate').onchange = renderHistory;
 
+// Export handler
 document.getElementById('exportBtn').onclick = () => {
-    let report = entries.map(e => `📅 ${e.date}\nMood: ${e.mood}/10 | Energi: ${e.energy}/10\n${e.text}\n${'─'.repeat(40)}`).join('\n');
-    const blob = new Blob([`LAPORAN JURNAL MENTAL\nTanggal: ${today()}\nTotal: ${entries.length} jurnal\n${'═'.repeat(50)}\n\n${report}`], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `laporan_mental_${today()}.txt`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    showToast('success', 'Laporan berhasil diunduh!');
+    if(!entries.length) {
+        showToast('warning', 'Tidak ada jurnal untuk diekspor', 'Kosong');
+        return;
+    }
+    
+    try {
+        let report = entries.map(e => `📅 ${e.date}\nMood: ${e.mood}/10 | Energi: ${e.energy}/10\n${e.text}\n${'─'.repeat(40)}`).join('\n');
+        const blob = new Blob([`LAPORAN JURNAL MENTAL\nTanggal: ${today()}\nTotal: ${entries.length} jurnal\n${'═'.repeat(50)}\n\n${report}`], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `laporan_mental_${today()}.txt`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        showToast('success', 'Laporan berhasil diunduh!');
+    } catch(err) {
+        showToast('error', 'Gagal mengekspor laporan');
+    }
 };
 
+// Copy to clipboard handler
 document.getElementById('copyBtn').onclick = async () => {
     const text = entries.map(e => `📅 ${e.date}\nMood: ${e.mood}/10\n${e.text}`).join('\n---\n');
     try {
@@ -962,26 +1008,14 @@ document.getElementById('copyBtn').onclick = async () => {
     }
 };
 
+// Clear cache handler
 document.getElementById('clearLocalCacheBtn').onclick = async () => {
-    const confirmed = await new Promise(resolve => {
-        const toast = showToast('warning', 'Hapus cache lokal? Data akan disinkronkan ulang dari cloud.', 'Konfirmasi');
-        toast.style.cursor = 'pointer';
-        toast.onclick = () => {
-            toast.remove();
-            resolve(true);
-        };
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.remove();
-                resolve(false);
-            }
-        }, 5000);
-    });
+    const confirmed = await confirmAction('Hapus cache lokal? Data akan disinkronkan ulang dari cloud.');
     
     if (confirmed) {
         localStorage.removeItem('rp_cache');
-        localStorage.removeItem('rp_user_profile');
         showToast('success', 'Cache lokal berhasil dihapus');
+        if(currentUser) loadData();
     }
 };
 
@@ -1003,17 +1037,14 @@ document.querySelectorAll('.toggle-password').forEach(btn => {
 function updateDigitalClock() {
     const now = new Date();
     
-    // Get hours, minutes, seconds
     let hours = now.getHours();
     let minutes = now.getMinutes();
     let seconds = now.getSeconds();
     
-    // Format with leading zeros
     hours = hours.toString().padStart(2, '0');
     minutes = minutes.toString().padStart(2, '0');
     seconds = seconds.toString().padStart(2, '0');
     
-    // Update time display
     const hoursElem = document.getElementById('hours');
     const minutesElem = document.getElementById('minutes');
     const secondsElem = document.getElementById('seconds');
@@ -1022,7 +1053,6 @@ function updateDigitalClock() {
     if (minutesElem) minutesElem.textContent = minutes;
     if (secondsElem) secondsElem.textContent = seconds;
     
-    // Format date in Indonesian
     const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
     const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     
@@ -1036,110 +1066,8 @@ function updateDigitalClock() {
     if (clockDateElem) clockDateElem.textContent = dateString;
 }
 
-// Start digital clock - update every second
 setInterval(updateDigitalClock, 1000);
-updateDigitalClock(); // Initial call
-
-// ============ PWA INSTALL HANDLER ============
-let deferredPrompt;
-
-// Check if app is already installed
-function isAppInstalled() {
-    return window.matchMedia('(display-mode: standalone)').matches || 
-           window.navigator.standalone === true;
-}
-
-// Show install prompt if needed
-function showInstallPrompt() {
-    if (!isAppInstalled() && deferredPrompt) {
-        // Create a floating install button (optional)
-        const existingBtn = document.getElementById('pwaInstallBtn');
-        if (!existingBtn) {
-            const installBtn = document.createElement('button');
-            installBtn.id = 'pwaInstallBtn';
-            installBtn.style.cssText = `
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                z-index: 9999;
-                background: var(--primary);
-                color: white;
-                border: none;
-                padding: 12px 20px;
-                border-radius: 50px;
-                font-family: inherit;
-                font-weight: 600;
-                cursor: pointer;
-                box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                animation: slideUp 0.5s ease-out;
-            `;
-            installBtn.innerHTML = `
-                <span class="material-symbols-rounded" style="font-size:20px;">download</span>
-                Install Aplikasi
-            `;
-            installBtn.addEventListener('click', () => {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then((choiceResult) => {
-                        if (choiceResult.outcome === 'accepted') {
-                            showToast('success', 'Terima kasih! Aplikasi sedang di-install.');
-                        }
-                        deferredPrompt = null;
-                        installBtn.remove();
-                    });
-                }
-            });
-            document.body.appendChild(installBtn);
-            
-            // Auto hide after 10 seconds
-            setTimeout(() => {
-                if (installBtn.parentNode) {
-                    installBtn.style.animation = 'slideDown 0.5s ease-in';
-                    setTimeout(() => installBtn.remove(), 500);
-                }
-            }, 10000);
-        }
-    }
-}
-
-// Listen for install prompt
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    
-    // Show install button after 3 seconds
-    setTimeout(showInstallPrompt, 3000);
-});
-
-// Track when app is installed
-window.addEventListener('appinstalled', () => {
-    deferredPrompt = null;
-    const installBtn = document.getElementById('pwaInstallBtn');
-    if (installBtn) installBtn.remove();
-    showToast('success', 'Aplikasi berhasil di-install! 🎉');
-    console.log('PWA installed successfully');
-});
-
-// Add CSS animation for install button
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideUp {
-        from { transform: translateY(100px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-    @keyframes slideDown {
-        from { transform: translateY(0); opacity: 1; }
-        to { transform: translateY(100px); opacity: 0; }
-    }
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-`;
-document.head.appendChild(style);
+updateDigitalClock();
 
 // ============ AUTH STATE ============
 onAuthStateChanged(auth, async (user) => {
@@ -1151,86 +1079,22 @@ onAuthStateChanged(auth, async (user) => {
         await loadUserProfile();
         loadData();
         renderProfile();
-        
-        // Restore last active tab or default to dashboard
-        const lastTab = localStorage.getItem('rp_active_tab') || 'dashboard';
-        showTab(lastTab);
-        
-        // Show install prompt after login
-        setTimeout(showInstallPrompt, 5000);
+        showTab('dashboard');
     } else {
         currentUser = null;
         document.getElementById('loginPage').style.display = 'flex';
         document.getElementById('mainApp').classList.remove('show');
         if(unsub) unsub();
         entries = [];
+        if(chart) {
+            chart.destroy();
+            chart = null;
+        }
     }
 });
 
 // ============ INITIAL SYNC CHECK ============
 updateSync();
 
-// ============ HANDLE APP SHORTCUTS (PWA) ============
-// Check for action parameter in URL (for PWA shortcuts)
-function handleAppShortcuts() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const action = urlParams.get('action');
-    
-    if (action && currentUser) {
-        switch(action) {
-            case 'journal':
-                showTab('journal');
-                break;
-            case 'dashboard':
-                showTab('dashboard');
-                break;
-            case 'analytics':
-                showTab('analytics');
-                break;
-        }
-        // Clean URL
-        window.history.replaceState({}, document.title, window.location.pathname);
-    }
-}
-
-// Check shortcuts after auth state is ready
-const checkShortcutsInterval = setInterval(() => {
-    if (currentUser !== undefined) {
-        handleAppShortcuts();
-        clearInterval(checkShortcutsInterval);
-    }
-}, 500);
-
-// ============ PWA STANDALONE MODE OPTIMIZATIONS ============
-if (window.matchMedia('(display-mode: standalone)').matches) {
-    // Add standalone class to body
-    document.body.classList.add('pwa-standalone');
-    
-    // Prevent overscroll/refresh
-    document.addEventListener('touchmove', function(e) {
-        if (e.target.closest('.chart-container') || 
-            e.target.closest('.history-list') ||
-            e.target.closest('textarea')) {
-            return;
-        }
-    }, { passive: false });
-}
-
-// ============ EXPORT FUNCTIONS ============
+// ============ EXPORT TOAST FUNCTION ============
 window.showToast = showToast;
-
-// ============ NETWORK STATUS CHECK ============
-// Periodic sync check
-setInterval(() => {
-    if (navigator.onLine && currentUser) {
-        // Try to sync any unsynced data
-        const cached = JSON.parse(localStorage.getItem('rp_cache') || '[]');
-        if (cached.length > 0) {
-            updateSync();
-        }
-    }
-}, 30000); // Check every 30 seconds
-
-console.log('🧠 Ruang Pikiran - PWA Ready');
-console.log('📱 Installable:', isAppInstalled() ? 'Already installed' : 'Ready to install');
-console.log('🌐 Online:', navigator.onLine);

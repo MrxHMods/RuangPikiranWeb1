@@ -7,25 +7,11 @@
     <meta name="description" content="Jurnal Mental untuk Dirimu & Dokter - Ruang aman untuk mencatat perasaan">
     <title>Ruang Pikiran | Jurnal Mental</title>
     
-    <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Ruang Pikiran">
-    <link rel="apple-touch-icon" href="/icons/icon-192.png">
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="48x48" href="/icons/icon-48.png">
-    <link rel="icon" type="image/png" sizes="72x72" href="/icons/icon-72.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="/icons/icon-96.png">
-    <link rel="icon" type="image/png" sizes="144x144" href="/icons/icon-144.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
     
     <!-- Google Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     
-    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
@@ -576,70 +562,7 @@
         </div>
     </div>
 
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script type="module" src="app.js"></script>
-    
-    <!-- PWA Registration Script -->
-    <script>
-        // Register Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then((registration) => {
-                        console.log('✅ Service Worker registered:', registration.scope);
-                        
-                        // Check for updates
-                        registration.addEventListener('updatefound', () => {
-                            const newWorker = registration.installing;
-                            newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    // Update available
-                                    if (window.showToast) {
-                                        window.showToast('info', 'Pembaruan tersedia. Tutup dan buka ulang aplikasi.', 'Update Tersedia');
-                                    }
-                                }
-                            });
-                        });
-                    })
-                    .catch((error) => {
-                        console.error('❌ Service Worker registration failed:', error);
-                    });
-            });
-        }
-        
-        // PWA Install Prompt
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent automatic prompt
-            e.preventDefault();
-            deferredPrompt = e;
-            
-            // Could show install button here
-            console.log('📱 PWA siap di-install');
-        });
-        
-        // Handle app installed
-        window.addEventListener('appinstalled', () => {
-            deferredPrompt = null;
-            if (window.showToast) {
-                window.showToast('success', 'Aplikasi berhasil di-install! 🎉');
-            }
-            console.log('✅ PWA installed');
-        });
-        
-        // Handle online/offline status
-        window.addEventListener('online', () => {
-            if (window.showToast) {
-                window.showToast('success', 'Koneksi pulih', 'Online');
-            }
-        });
-        
-        window.addEventListener('offline', () => {
-            if (window.showToast) {
-                window.showToast('warning', 'Anda sedang offline', 'Offline');
-            }
-        });
-    </script>
 </body>
 </html>
