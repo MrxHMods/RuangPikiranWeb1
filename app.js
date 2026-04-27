@@ -2,6 +2,129 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/fireba
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 import { getFirestore, enableIndexedDbPersistence, collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy, limit, getDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
+// ============ AUTO CACHE CONTROL ============
+const CACHE_VERSION = '1.0.2';
+const CACHE_EXPIRY_DAYS = 7;
+const MAX_CACHE_ENTRIES = 500;
+
+// Service Worker Registration for Cache Control
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            registrations.forEach(registration => registration.unregister());
+            console.log('✅ Service workers unregistered for fresh content');
+        });
+    });
+}
+
+function getCacheMetadata() {
+    try {
+        const metadata = localStorage.getItem('rp_cache_metadata');
+        return metadata ? JSON.parse(metadata) : { version: CACHE_VERSION, lastCleanup: null, totalEntries: 0 };
+    } catch (e) {
+        return { version: CACHE_VERSION, lastCleanup: null, totalEntries: 0 };
+    }
+}
+
+function setCacheMetadata(metadata) {
+    try {
+        localStorage.setItem('rp_cache_metadata', JSON.stringify(metadata));
+    } catch (e) {
+        console.warn('Failed to save cache metadata:', e);
+    }
+}
+
+function cleanExpiredCache() {
+    const metadata = getCacheMetadata();
+    const now = new Date();
+    
+    if (metadata.version !== CACHE_VERSION) {
+        console.log('🔄 Cache version mismatch, clearing old cache...');
+        localStorage.removeItem('rp_cache');
+        metadata.version = CACHE_VERSION;
+        metadata.lastCleanup = now.toISOString();
+        metadata.totalEntries = 0;
+        setCacheMetadata(metadata);
+        return;
+    }
+    
+    if (metadata.lastCleanup) {
+        const lastCleanup = new Date(metadata.lastCleanup);
+        const daysSinceCleanup = (now - lastCleanup) / (1000 * 60 * 60 * 24);
+        
+        if (daysSinceCleanup >= CACHE_EXPIRY_DAYS) {
+            console.log('🧹 Cleaning expired cache...');
+            const cachedEntries = JSON.parse(localStorage.getItem('rp_cache') || '[]');
+            
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - CACHE_EXPIRY_DAYS);
+            
+            const validEntries = cachedEntries.filter(entry => {
+                const entryDate = new Date(entry.date || entry.timestamp);
+                return entryDate >= cutoffDate;
+            });
+            
+            const trimmedEntries = validEntries.slice(0, MAX_CACHE_ENTRIES);
+            
+            localStorage.setItem('rp_cache', JSON.stringify(trimmedEntries));
+            metadata.lastCleanup = now.toISOString();
+            metadata.totalEntries = trimmedEntries.length;
+            setCacheMetadata(metadata);
+            
+            console.log(`✅ Cache cleaned: ${cachedEntries.length - trimmedEntries.length} entries removed`);
+        }
+    } else {
+        metadata.lastCleanup = now.toISOString();
+        setCacheMetadata(metadata);
+    }
+}
+
+function optimizeCache() {
+    try {
+        const cachedEntries = JSON.parse(localStorage.getItem('rp_cache') || '[]');
+        if (cachedEntries.length > MAX_CACHE_ENTRIES) {
+            console.log('📦 Cache optimization: trimming entries...');
+            const trimmedEntries = cachedEntries.slice(0, MAX_CACHE_ENTRIES);
+            localStorage.setItem('rp_cache', JSON.stringify(trimmedEntries));
+            
+            const metadata = getCacheMetadata();
+            metadata.totalEntries = trimmedEntries.length;
+            setCacheMetadata(metadata);
+        }
+    } catch (e) {
+        console.warn('Cache optimization failed:', e);
+    }
+}
+
+function clearAllCaches() {
+    localStorage.removeItem('rp_cache');
+    localStorage.removeItem('rp_cache_metadata');
+    console.log('🗑️ All caches cleared');
+}
+
+function addCacheBuster(url) {
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}v=${CACHE_VERSION}&t=${Date.now()}`;
+}
+
+setInterval(() => {
+    cleanExpiredCache();
+    optimizeCache();
+}, 60 * 60 * 1000);
+
+cleanExpiredCache();
+optimizeCache();
+
+document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+        e.preventDefault();
+        clearAllCaches();
+        showToast('success', 'Cache berhasil dibersihkan! Refresh halaman untuk efek penuh.', 'Cache Cleared');
+        setTimeout(() => location.reload(), 2000);
+    }
+});
+
+// ============ FIREBASE CONFIG ============
 const firebaseConfig = {
     apiKey: "AIzaSyCJ532nHpPtBunCTM32JuCOY1uUN8tliK4",
     authDomain: "ruang-pikiran.firebaseapp.com",
@@ -36,14 +159,10 @@ function showToast(type = 'info', message = '', title = '') {
     const container = document.getElementById('toastContainer');
     if (!container) return;
 
-    // Generate unique ID for toast
     const toastId = 'toast-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-    
-    // Set default title based on type if not provided
     const toastTitle = title || toastTitles[type] || 'Notifikasi';
     const icon = toastIcons[type] || 'info';
     
-    // Create toast element
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.id = toastId;
@@ -64,15 +183,12 @@ function showToast(type = 'info', message = '', title = '') {
         </div>
     `;
     
-    // Add to container
     container.appendChild(toast);
     
-    // Trigger animation
     requestAnimationFrame(() => {
         toast.classList.add('show');
     });
     
-    // Auto remove after duration
     const duration = type === 'error' ? 5000 : 3500;
     setTimeout(() => {
         if (toast.parentNode) {
@@ -83,7 +199,6 @@ function showToast(type = 'info', message = '', title = '') {
                 }
             }, { once: true });
             
-            // Fallback remove
             setTimeout(() => {
                 if (toast.parentNode) {
                     toast.remove();
@@ -92,7 +207,6 @@ function showToast(type = 'info', message = '', title = '') {
         }
     }, duration);
     
-    // Click to dismiss
     toast.addEventListener('click', (e) => {
         if (!e.target.closest('.toast-close')) {
             if (toast.parentNode) {
@@ -107,15 +221,12 @@ function showToast(type = 'info', message = '', title = '') {
     return toast;
 }
 
-// Function to replace alert with toast
 function showAlert(message, type = 'warning') {
     showToast(type, message);
 }
 
-// Override window.alert to use toast for better UX
 const originalAlert = window.alert;
 window.alert = function(message) {
-    // Check if message contains success indicators
     if (message.includes('✅') || message.includes('berhasil') || message.includes('tersimpan') || message.includes('Disalin')) {
         showToast('success', message.replace('✅ ', ''));
     } else if (message.includes('❌') || message.includes('Gagal') || message.includes('gagal')) {
@@ -127,11 +238,13 @@ window.alert = function(message) {
     }
 };
 
-// ============ RAIN ANIMATION ============
+// ============ ENHANCED RAIN ANIMATION ============
 const canvas = document.getElementById('rainCanvas');
 let ctx = canvas.getContext('2d');
 let width, height;
 let drops = [];
+let splashes = [];
+let mistParticles = [];
 
 function resizeCanvas() {
     width = window.innerWidth;
@@ -143,35 +256,207 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-for(let i = 0; i < 200; i++) {
-    drops.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        length: Math.random() * 20 + 10,
-        speed: Math.random() * 5 + 3,
-        opacity: Math.random() * 0.4 + 0.1
-    });
+function createRaindrop() {
+    const speed = Math.random() * 8 + 12;
+    const length = Math.random() * 25 + 8;
+    const opacity = Math.random() * 0.35 + 0.08;
+    
+    return {
+        x: Math.random() * width * 1.2 - width * 0.1,
+        y: Math.random() * -height - 50,
+        length: length,
+        speed: speed,
+        opacity: opacity,
+        width: Math.random() * 1.2 + 0.3,
+        windDrift: (Math.random() - 0.5) * 1.5,
+        wobble: Math.random() * 0.5,
+        wobbleSpeed: Math.random() * 0.02 + 0.01,
+        wobbleOffset: Math.random() * Math.PI * 2,
+        trailLength: Math.floor(length * 0.6)
+    };
+}
+
+function createSplash(x, y, speed) {
+    const particles = [];
+    const particleCount = Math.floor(Math.random() * 4) + 2;
+    
+    for (let i = 0; i < particleCount; i++) {
+        const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI;
+        const velocity = Math.random() * speed * 0.3 + speed * 0.1;
+        particles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * velocity,
+            vy: Math.sin(angle) * velocity,
+            life: 1.0,
+            decay: Math.random() * 0.06 + 0.04,
+            size: Math.random() * 1.5 + 0.5,
+            gravity: 0.08
+        });
+    }
+    return particles;
+}
+
+function createMist(x, y) {
+    return {
+        x: x + (Math.random() - 0.5) * 20,
+        y: y - Math.random() * 5,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: -Math.random() * 0.2 - 0.05,
+        life: Math.random() * 0.5 + 0.3,
+        size: Math.random() * 8 + 4
+    };
+}
+
+for(let i = 0; i < 180; i++) {
+    drops.push(createRaindrop());
 }
 
 function drawRain() {
     if(!ctx) return;
+    
     ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = 'rgba(79, 70, 229, 0.03)';
+    
+    // Ambient mist gradient at the bottom
+    const mistGradient = ctx.createLinearGradient(0, height * 0.75, 0, height);
+    mistGradient.addColorStop(0, 'rgba(79, 70, 229, 0)');
+    mistGradient.addColorStop(1, 'rgba(79, 70, 229, 0.015)');
+    ctx.fillStyle = mistGradient;
     ctx.fillRect(0, 0, width, height);
     
-    for(let drop of drops) {
-        ctx.beginPath();
-        ctx.moveTo(drop.x, drop.y);
-        ctx.lineTo(drop.x, drop.y + drop.length);
-        ctx.strokeStyle = `rgba(100, 149, 237, ${drop.opacity})`;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        drop.y += drop.speed;
-        if(drop.y > height) {
-            drop.y = -drop.length;
-            drop.x = Math.random() * width;
+    // Update and draw splash particles
+    for (let i = splashes.length - 1; i >= 0; i--) {
+        const splash = splashes[i];
+        splash.life -= splash.decay;
+        
+        if (splash.life <= 0) {
+            splashes.splice(i, 1);
+            continue;
         }
+        
+        splash.vy += splash.gravity;
+        splash.x += splash.vx;
+        splash.y += splash.vy;
+        
+        const alpha = splash.life * 0.6;
+        const size = splash.size * splash.life;
+        
+        ctx.beginPath();
+        ctx.arc(splash.x, splash.y, size, 0, Math.PI * 2);
+        
+        const splashGradient = ctx.createRadialGradient(splash.x, splash.y, 0, splash.x, splash.y, size);
+        splashGradient.addColorStop(0, `rgba(180, 200, 255, ${alpha})`);
+        splashGradient.addColorStop(0.5, `rgba(140, 170, 240, ${alpha * 0.6})`);
+        splashGradient.addColorStop(1, `rgba(100, 140, 220, 0)`);
+        
+        ctx.fillStyle = splashGradient;
+        ctx.fill();
     }
+    
+    // Draw mist particles
+    for (let i = mistParticles.length - 1; i >= 0; i--) {
+        const mist = mistParticles[i];
+        mist.life -= 0.004;
+        mist.x += mist.vx;
+        mist.y += mist.vy;
+        
+        if (mist.life <= 0) {
+            mistParticles.splice(i, 1);
+            continue;
+        }
+        
+        const alpha = mist.life * 0.06;
+        ctx.beginPath();
+        ctx.arc(mist.x, mist.y, mist.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(150, 180, 220, ${alpha})`;
+        ctx.fill();
+    }
+    
+    // Draw raindrops
+    const time = Date.now();
+    
+    for (let i = 0; i < drops.length; i++) {
+        const drop = drops[i];
+        
+        // Wobble effect
+        const wobbleX = Math.sin(time * drop.wobbleSpeed + drop.wobbleOffset) * drop.wobble;
+        const x = drop.x + wobbleX;
+        const y = drop.y;
+        const fullLength = drop.length;
+        const trailLength = fullLength * 0.4;
+        
+        // Main drop body
+        const dropGradient = ctx.createLinearGradient(x, y, x, y + fullLength);
+        const alpha = drop.opacity;
+        dropGradient.addColorStop(0, `rgba(200, 215, 255, ${alpha * 0.2})`);
+        dropGradient.addColorStop(0.3, `rgba(170, 195, 245, ${alpha * 0.5})`);
+        dropGradient.addColorStop(0.7, `rgba(130, 165, 235, ${alpha * 0.8})`);
+        dropGradient.addColorStop(1, `rgba(100, 145, 225, ${alpha})`);
+        
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x, y + fullLength);
+        ctx.strokeStyle = dropGradient;
+        ctx.lineWidth = drop.width;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        
+        // Trail behind drop (fading)
+        const trailGradient = ctx.createLinearGradient(x, y - trailLength, x, y);
+        trailGradient.addColorStop(0, `rgba(160, 190, 240, 0)`);
+        trailGradient.addColorStop(1, `rgba(180, 200, 245, ${alpha * 0.25})`);
+        
+        ctx.beginPath();
+        ctx.moveTo(x, y - trailLength);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = trailGradient;
+        ctx.lineWidth = drop.width * 0.7;
+        ctx.stroke();
+        
+        // Glow for brighter drops
+        if (drop.opacity > 0.28) {
+            ctx.beginPath();
+            ctx.moveTo(x, y + 2);
+            ctx.lineTo(x, y + fullLength - 2);
+            ctx.strokeStyle = `rgba(200, 220, 255, ${alpha * 0.1})`;
+            ctx.lineWidth = drop.width + 1.5;
+            ctx.stroke();
+        }
+        
+        // Move drop
+        drop.y += drop.speed;
+        drop.x += drop.windDrift;
+        
+        // Impact on ground
+        if (drop.y > height) {
+            const newSplashes = createSplash(drop.x, height, drop.speed);
+            splashes.push(...newSplashes);
+            
+            if (Math.random() < 0.4) {
+                mistParticles.push(createMist(drop.x, height));
+            }
+            
+            drop.y = -drop.length - Math.random() * 150;
+            drop.x = Math.random() * width * 1.2 - width * 0.1;
+            
+            if (Math.random() < 0.25) {
+                drop.speed = Math.random() * 8 + 12;
+                drop.length = Math.random() * 25 + 8;
+                drop.opacity = Math.random() * 0.35 + 0.08;
+                drop.windDrift = (Math.random() - 0.5) * 1.5;
+                drop.width = Math.random() * 1.2 + 0.3;
+            }
+        }
+        
+        // Wrap around horizontally
+        if (drop.x > width + 20) drop.x = -20;
+        if (drop.x < -20) drop.x = width + 20;
+    }
+    
+    // Limit particles
+    if (splashes.length > 100) splashes.splice(0, splashes.length - 100);
+    if (mistParticles.length > 80) mistParticles.splice(0, mistParticles.length - 80);
+    
     requestAnimationFrame(drawRain);
 }
 
@@ -232,7 +517,6 @@ function showError(msg, code = '') {
 
 function getFirebaseErrorMessage(error) {
     const errorMap = {
-        // Auth errors
         'auth/invalid-email': 'Format email tidak valid',
         'auth/user-disabled': 'Akun ini telah dinonaktifkan. Hubungi dukungan',
         'auth/user-not-found': 'Email belum terdaftar. Silakan daftar terlebih dahulu',
@@ -245,8 +529,6 @@ function getFirebaseErrorMessage(error) {
         'auth/network-request-failed': 'Gangguan jaringan. Periksa koneksi internet Anda',
         'auth/requires-recent-login': 'Silakan login ulang untuk melanjutkan',
         'auth/account-exists-with-different-credential': 'Email sudah terdaftar dengan metode lain',
-        
-        // Firestore errors
         'unavailable': 'Layanan sedang sibuk. Menggunakan data lokal',
         'resource-exhausted': 'Server sibuk. Data disimpan sementara secara lokal',
         'permission-denied': 'Anda tidak memiliki izin untuk akses ini',
@@ -548,27 +830,23 @@ document.getElementById('loginBtn').onclick = async () => {
     const email = document.getElementById('loginEmail').value.trim();
     const pass = document.getElementById('loginPassword').value;
     
-    // Validasi input
     if(!email || !pass) {
         showError('Isi email dan password');
         return;
     }
     
-    // Validasi format email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if(!emailRegex.test(email)) {
         showError('Format email tidak valid');
         return;
     }
     
-    // Cek koneksi
     if(!isOnline()) return;
     
     const loginBtn = document.getElementById('loginBtn');
     const originalHTML = loginBtn.innerHTML;
     
     try {
-        // Loading state
         loginBtn.disabled = true;
         loginBtn.innerHTML = '<span class="material-symbols-rounded">hourglass_top</span> Memproses...';
         
@@ -590,7 +868,6 @@ document.getElementById('registerBtn').onclick = async () => {
     const pass = document.getElementById('registerPassword').value;
     const confirm = document.getElementById('registerConfirm').value;
     
-    // Validasi input
     if(!email || !pass) {
         showError('Isi semua field');
         return;
@@ -625,7 +902,6 @@ document.getElementById('registerBtn').onclick = async () => {
         showToast('success', 'Akun berhasil dibuat! Selamat datang.', 'Registrasi Berhasil');
         document.getElementById('errorMessage')?.classList.remove('show');
         
-        // Reset form
         document.getElementById('registerEmail').value = '';
         document.getElementById('registerPassword').value = '';
         document.getElementById('registerConfirm').value = '';
@@ -665,6 +941,11 @@ function loadData() {
     unsub = onSnapshot(q, (snap) => {
         entries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         localStorage.setItem('rp_cache', JSON.stringify(entries));
+        
+        const metadata = getCacheMetadata();
+        metadata.totalEntries = entries.length;
+        setCacheMetadata(metadata);
+        
         renderDashboard();
         if(!document.getElementById('analyticsPanel').classList.contains('hidden')) renderAnalytics();
         renderProfile();
@@ -685,10 +966,10 @@ async function saveEntry(entry) {
     
     try {
         await setDoc(doc(db, 'users', currentUser.uid, 'journal_entries', entry.id.toString()), entry);
+        optimizeCache();
     } catch(err) {
         console.error("Save error:", err);
         
-        // Simpan ke localStorage sebagai backup
         const cacheEntries = JSON.parse(localStorage.getItem('rp_cache') || '[]');
         const index = cacheEntries.findIndex(e => e.id === entry.id);
         if(index !== -1) {
@@ -769,7 +1050,6 @@ function renderHistory() {
         </div>
     `).join('');
     
-    // Delete handlers
     document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.onclick = async () => {
             const confirmed = await confirmAction('Hapus jurnal ini? Tindakan tidak dapat dibatalkan.');
@@ -938,12 +1218,10 @@ document.getElementById('saveJournalBtn').onclick = async () => {
         }
     };
     
-    // Check for dark thoughts warning
     if (entry.dark.selfHarm || entry.dark.hopeless) {
         showToast('warning', 'Jurnal tersimpan. Jika Anda merasa sangat tertekan, jangan ragu untuk mencari bantuan profesional. 📞 119 ext 8', 'Perhatian');
     }
     
-    // Update local entries
     const existingIndex = entries.findIndex(e => e.date === today());
     if(existingIndex !== -1) entries[existingIndex] = entry;
     else entries.unshift(entry);
@@ -951,7 +1229,6 @@ document.getElementById('saveJournalBtn').onclick = async () => {
     await saveEntry(entry);
     showToast('success', 'Jurnal berhasil disimpan!');
     
-    // Clear form
     document.getElementById('journalText').value = '';
     document.querySelectorAll('#thoughtTags .tag.selected').forEach(t => t.classList.remove('selected'));
     document.getElementById('selfHarmCheck').checked = false;
@@ -966,7 +1243,6 @@ document.getElementById('saveJournalBtn').onclick = async () => {
     showTab('dashboard');
 };
 
-// Other event listeners
 document.getElementById('quickMoodBtn').onclick = () => showTab('journal');
 
 document.getElementById('resetFilterBtn').onclick = () => {
@@ -1013,7 +1289,7 @@ document.getElementById('clearLocalCacheBtn').onclick = async () => {
     const confirmed = await confirmAction('Hapus cache lokal? Data akan disinkronkan ulang dari cloud.');
     
     if (confirmed) {
-        localStorage.removeItem('rp_cache');
+        clearAllCaches();
         showToast('success', 'Cache lokal berhasil dihapus');
         if(currentUser) loadData();
     }
@@ -1096,5 +1372,6 @@ onAuthStateChanged(auth, async (user) => {
 // ============ INITIAL SYNC CHECK ============
 updateSync();
 
-// ============ EXPORT TOAST FUNCTION ============
+// ============ EXPORT FUNCTIONS ============
 window.showToast = showToast;
+window.clearAllCaches = clearAllCaches;

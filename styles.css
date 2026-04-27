@@ -500,60 +500,24 @@ button:has(.material-symbols-rounded) {
 }
 
 /* Toast Success */
-.toast.success::before {
-    background: var(--success);
-}
-
-.toast.success .toast-icon {
-    background: var(--success-soft);
-    color: var(--success);
-}
-
-.toast.success .toast-progress-bar {
-    background: var(--success);
-}
+.toast.success::before { background: var(--success); }
+.toast.success .toast-icon { background: var(--success-soft); color: var(--success); }
+.toast.success .toast-progress-bar { background: var(--success); }
 
 /* Toast Error */
-.toast.error::before {
-    background: var(--danger);
-}
-
-.toast.error .toast-icon {
-    background: var(--danger-soft);
-    color: var(--danger);
-}
-
-.toast.error .toast-progress-bar {
-    background: var(--danger);
-}
+.toast.error::before { background: var(--danger); }
+.toast.error .toast-icon { background: var(--danger-soft); color: var(--danger); }
+.toast.error .toast-progress-bar { background: var(--danger); }
 
 /* Toast Warning */
-.toast.warning::before {
-    background: var(--warning);
-}
-
-.toast.warning .toast-icon {
-    background: var(--warning-soft);
-    color: var(--warning);
-}
-
-.toast.warning .toast-progress-bar {
-    background: var(--warning);
-}
+.toast.warning::before { background: var(--warning); }
+.toast.warning .toast-icon { background: var(--warning-soft); color: var(--warning); }
+.toast.warning .toast-progress-bar { background: var(--warning); }
 
 /* Toast Info */
-.toast.info::before {
-    background: var(--info);
-}
-
-.toast.info .toast-icon {
-    background: var(--info-soft);
-    color: var(--info);
-}
-
-.toast.info .toast-progress-bar {
-    background: var(--info);
-}
+.toast.info::before { background: var(--info); }
+.toast.info .toast-icon { background: var(--info-soft); color: var(--info); }
+.toast.info .toast-progress-bar { background: var(--info); }
 
 /* ============ CUSTOM CHECKBOX ============ */
 .custom-checkbox-wrapper {
@@ -723,15 +687,9 @@ button:has(.material-symbols-rounded) {
 }
 
 @keyframes dangerPulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
-    }
-    70% {
-        box-shadow: 0 0 0 12px rgba(220, 38, 38, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
-    }
+    0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+    70% { box-shadow: 0 0 0 12px rgba(220, 38, 38, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
 }
 
 /* Ripple effect on click */
@@ -1143,7 +1101,6 @@ html.dark .theme-toggle:hover {
     color: white;
 }
 
-/* ============ Tablet: Tampilkan icon & text ============ */
 @media (min-width: 769px) and (max-width: 1024px) {
     .nav-tabs {
         gap: 6px;
@@ -1161,7 +1118,6 @@ html.dark .theme-toggle:hover {
     }
 }
 
-/* ============ HP Kecil: Hanya icon, text disembunyikan ============ */
 @media (max-width: 768px) {
     .nav-tabs {
         gap: 4px;
@@ -1198,7 +1154,6 @@ html.dark .theme-toggle:hover {
     }
 }
 
-/* ============ HP Sangat Kecil (≤ 400px) ============ */
 @media (max-width: 400px) {
     .nav-tabs {
         gap: 2px;
@@ -1230,7 +1185,6 @@ html.dark .theme-toggle:hover {
     }
 }
 
-/* ============ Laptop/Desktop Besar (> 1024px) ============ */
 @media (min-width: 1025px) {
     .nav-tabs {
         gap: 10px;
@@ -1507,7 +1461,6 @@ input[type="range"]::-webkit-slider-thumb {
     background: var(--primary-light);
 }
 
-/* Photo preview container */
 .photo-preview-container {
     display: flex;
     justify-content: center;
@@ -1537,7 +1490,6 @@ input[type="range"]::-webkit-slider-thumb {
     color: var(--text-secondary);
 }
 
-/* Responsive profile photo */
 @media (max-width: 768px) {
     .profile-avatar {
         width: 80px;
