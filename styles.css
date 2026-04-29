@@ -49,15 +49,90 @@ html.dark {
 
 body {
     background: var(--bg);
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     color: var(--text);
     min-height: 100vh;
     transition: all 0.3s ease;
     position: relative;
     overflow-x: hidden;
+    font-weight: 500;
+    letter-spacing: -0.01em;
 }
 
-/* RAIN CANVAS */
+/* Semua elemen menggunakan Plus Jakarta Sans */
+body, html, *:not(.material-symbols-rounded):not(.material-symbols-rounded *) {
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6,
+.logo h1,
+.login-card h1,
+.card h2,
+.modal-header h3,
+.nav-tabs .tab-btn,
+.btn, .btn-sm, .btn-primary, .btn-primary-lg,
+.modal-save, .modal-cancel,
+.period-btn,
+.tag,
+.toggle-link a,
+.form-input,
+textarea,
+input, button, select, option {
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+}
+
+/* Heading dengan weight lebih bold */
+h1, h2, .logo h1, .login-card h1, .card h2 {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+h3, h4, .modal-header h3 {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+/* Text body */
+p, span, li, .quote-item, .insight-box, .history-item {
+    font-weight: 500;
+}
+
+/* Label dan form */
+label, .form-group label, .slider-group label {
+    font-weight: 600;
+}
+
+/* Kecil dan secondary */
+small, .text-small, .clock-date, 
+.notification-text-wrapper small,
+.notification-item-date,
+.toast-message,
+.offline-banner,
+.sync-indicator,
+footer {
+    font-weight: 500;
+}
+
+/* Jam digital */
+.clock-time,
+.digital-clock,
+.clock-separator,
+.clock-date {
+    font-family: 'Plus Jakarta Sans', 'Inter', monospace;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+/* Angka pada summary card */
+.summary-card .big,
+#energyVal,
+#intensityLabel {
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-weight: 800;
+}
+
+/* ============ RAIN CANVAS ============ */
 .rain-canvas {
     position: fixed;
     top: 0;
@@ -69,8 +144,14 @@ body {
     opacity: 0.5;
 }
 
+/* Mode terang - efek hujan lebih terlihat */
+html:not(.dark) .rain-canvas {
+    opacity: 0.6;
+}
+
+/* Mode gelap - sedikit lebih transparan */
 html.dark .rain-canvas {
-    opacity: 0.3;
+    opacity: 0.25;
 }
 
 .content-wrapper {
@@ -276,6 +357,7 @@ html.dark .rain-canvas {
     font-size: 0.95rem;
     margin-bottom: 4px;
     color: var(--text);
+    font-weight: 700;
 }
 
 .notification-text-wrapper p {
@@ -283,12 +365,14 @@ html.dark .rain-canvas {
     color: var(--text-secondary);
     line-height: 1.5;
     word-wrap: break-word;
+    font-weight: 500;
 }
 
 .notification-text-wrapper small {
     display: block;
     margin-top: 6px;
     font-size: 0.7rem;
+    font-weight: 500;
 }
 
 .notification-close-btn {
@@ -329,6 +413,7 @@ html.dark .rain-canvas {
     font-size: 1.1rem;
     display: flex;
     align-items: center;
+    font-weight: 700;
 }
 
 .modal-close-btn {
@@ -396,7 +481,7 @@ html.dark .rain-canvas {
 }
 
 .notification-item-title {
-    font-weight: 600;
+    font-weight: 700;
     font-size: 0.9rem;
     margin-bottom: 4px;
     color: var(--text);
@@ -407,12 +492,14 @@ html.dark .rain-canvas {
     font-size: 0.85rem;
     color: var(--text-secondary);
     line-height: 1.5;
+    font-weight: 500;
 }
 
 .notification-item-date {
     font-size: 0.7rem;
     color: var(--text-tertiary);
     margin-top: 8px;
+    font-weight: 500;
 }
 
 .notification-empty {
@@ -430,6 +517,7 @@ html.dark .rain-canvas {
 
 .notification-empty p {
     font-size: 0.9rem;
+    font-weight: 500;
 }
 
 .notification-actions {
@@ -448,12 +536,13 @@ html.dark .rain-canvas {
     background: var(--bg);
     color: var(--text);
     cursor: pointer;
-    font-family: inherit;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     font-size: 0.8rem;
     display: inline-flex;
     align-items: center;
     gap: 6px;
     transition: all 0.2s;
+    font-weight: 600;
 }
 
 .btn-mark-read:hover {
@@ -487,6 +576,7 @@ html.dark .rain-canvas {
     line-height: 1.5;
     padding: 4px 5px;
     text-align: left;
+    font-weight: 500;
 }
 
 .quote-item:nth-child(1) { animation-delay: 0s; }
@@ -535,6 +625,7 @@ html.dark .rain-canvas {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
     display: inline-block;
     line-height: 1;
+    font-family: 'Material Symbols Rounded' !important;
 }
 
 .btn .material-symbols-rounded,
@@ -596,7 +687,7 @@ button:has(.material-symbols-rounded) {
 }
 
 .clock-time {
-    font-family: 'Inter', monospace;
+    font-family: 'Plus Jakarta Sans', 'Inter', monospace;
     font-size: 2rem;
     font-weight: 700;
     letter-spacing: 2px;
@@ -607,6 +698,7 @@ button:has(.material-symbols-rounded) {
 .clock-separator {
     animation: blink 1s infinite;
     color: var(--text-secondary);
+    font-weight: 700;
 }
 
 @keyframes blink {
@@ -619,6 +711,7 @@ button:has(.material-symbols-rounded) {
     color: var(--text-secondary);
     margin-top: 4px;
     letter-spacing: 0.5px;
+    font-weight: 600;
 }
 
 @media (max-width: 768px) {
@@ -701,7 +794,7 @@ button:has(.material-symbols-rounded) {
 }
 
 .toast-title {
-    font-weight: 600;
+    font-weight: 700;
     font-size: 0.9rem;
     margin-bottom: 4px;
     color: var(--text);
@@ -711,6 +804,7 @@ button:has(.material-symbols-rounded) {
     font-size: 0.85rem;
     color: var(--text-secondary);
     line-height: 1.4;
+    font-weight: 500;
 }
 
 .toast-close {
@@ -854,14 +948,14 @@ button:has(.material-symbols-rounded) {
 
 .checkbox-label {
     font-size: 0.9rem;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text);
     transition: all 0.3s ease;
 }
 
 .custom-checkbox-wrapper input:checked ~ .checkbox-label {
     color: var(--primary);
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .checkbox-icon {
@@ -913,7 +1007,7 @@ button:has(.material-symbols-rounded) {
 
 .custom-checkbox-wrapper.danger input:checked ~ .checkbox-label {
     color: var(--danger);
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .custom-checkbox-wrapper.danger input:checked ~ .checkmark {
@@ -1062,12 +1156,14 @@ html.dark .theme-toggle:hover {
     text-align: center;
     font-size: 1.8rem;
     margin-bottom: 8px;
+    font-weight: 800;
 }
 
 .login-card p {
     text-align: center;
     color: var(--text-secondary);
     margin-bottom: 30px;
+    font-weight: 500;
 }
 
 .form-group { margin-bottom: 20px; }
@@ -1075,7 +1171,7 @@ html.dark .theme-toggle:hover {
 .form-group label {
     display: block;
     margin-bottom: 8px;
-    font-weight: 500;
+    font-weight: 600;
     font-size: 0.85rem;
 }
 
@@ -1086,11 +1182,12 @@ html.dark .theme-toggle:hover {
     border-radius: var(--radius-md);
     background: var(--bg);
     color: var(--text);
-    font-family: inherit;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     font-size: 0.95rem;
     outline: none;
     transition: all 0.2s;
     box-sizing: border-box;
+    font-weight: 500;
 }
 
 .form-input:focus {
@@ -1118,11 +1215,12 @@ html.dark .theme-toggle:hover {
     width: 100%;
     padding: 12px;
     border-radius: var(--radius-md);
-    font-weight: 600;
+    font-weight: 700;
     font-size: 1rem;
     cursor: pointer;
     border: none;
     transition: all 0.2s;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 .btn-primary {
@@ -1149,6 +1247,7 @@ html.dark .theme-toggle:hover {
     margin-bottom: 20px;
     display: none;
     font-size: 0.85rem;
+    font-weight: 500;
 }
 
 .error-msg.show { display: block; }
@@ -1157,13 +1256,14 @@ html.dark .theme-toggle:hover {
     text-align: center;
     margin-top: 20px;
     font-size: 0.85rem;
+    font-weight: 500;
 }
 
 .toggle-link a {
     color: var(--primary);
     cursor: pointer;
     text-decoration: none;
-    font-weight: 500;
+    font-weight: 700;
 }
 
 /* ============ MAIN APP ============ */
@@ -1211,6 +1311,7 @@ html.dark .theme-toggle:hover {
 .logo h1 {
     font-size: 1.4rem;
     margin-bottom: 2px;
+    font-weight: 800;
 }
 
 .header-actions {
@@ -1229,13 +1330,14 @@ html.dark .theme-toggle:hover {
     gap: 8px;
     cursor: pointer;
     border: 1px solid var(--border);
+    font-weight: 600;
 }
 
 .sync-indicator {
     padding: 6px 12px;
     border-radius: 40px;
     font-size: 0.75rem;
-    font-weight: 500;
+    font-weight: 600;
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -1258,44 +1360,57 @@ html.dark .theme-toggle:hover {
     border: 1px solid var(--border);
     color: var(--text);
     cursor: pointer;
-    font-family: inherit;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    font-weight: 600;
 }
 
-/* ============ NAV TABS ============ */
+/* ============ NAV TABS - RESPONSIVE IMPROVED ============ */
 .nav-tabs {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     margin-bottom: 24px;
     background: var(--card-bg);
     padding: 6px;
-    border-radius: 60px;
+    border-radius: 50px;
     border: 1px solid var(--border);
-    flex-wrap: wrap;
-    justify-content: center;
     overflow-x: auto;
+    overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) var(--border);
+    flex-wrap: nowrap;
 }
 
-.nav-tabs::-webkit-scrollbar { display: none; }
+/* Custom scrollbar untuk nav-tabs */
+.nav-tabs::-webkit-scrollbar {
+    height: 4px;
+}
+
+.nav-tabs::-webkit-scrollbar-track {
+    background: var(--border);
+    border-radius: 10px;
+}
+
+.nav-tabs::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 10px;
+}
 
 .tab-btn {
-    flex: 1 1 auto;
-    min-width: fit-content;
-    padding: 10px 16px;
+    flex-shrink: 0;
+    padding: 10px 18px;
     border: none;
     background: transparent;
-    border-radius: 50px;
-    font-weight: 500;
+    border-radius: 40px;
+    font-weight: 600;
     cursor: pointer;
     color: var(--text-secondary);
-    font-family: inherit;
-    transition: all 0.2s;
-    display: flex;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    transition: all 0.2s ease;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
@@ -1304,8 +1419,13 @@ html.dark .theme-toggle:hover {
 }
 
 .tab-btn .material-symbols-rounded {
-    font-size: 20px;
+    font-size: 18px;
     flex-shrink: 0;
+}
+
+.tab-btn:hover {
+    background: var(--primary-soft);
+    color: var(--primary);
 }
 
 .tab-btn.active {
@@ -1313,33 +1433,103 @@ html.dark .theme-toggle:hover {
     color: white;
 }
 
-@media (min-width: 769px) and (max-width: 1024px) {
-    .nav-tabs { gap: 6px; padding: 5px; }
-    .tab-btn { padding: 10px 14px; font-size: 0.8rem; gap: 6px; }
-    .tab-btn .material-symbols-rounded { font-size: 18px; }
+/* LAPTOP / DESKTOP (min-width: 1024px) */
+@media (min-width: 1024px) {
+    .nav-tabs {
+        gap: 10px;
+        padding: 8px 12px;
+        border-radius: 60px;
+        flex-wrap: nowrap;
+        overflow-x: visible;
+    }
+    .tab-btn {
+        padding: 12px 24px;
+        font-size: 0.95rem;
+        flex-shrink: 1;
+    }
+    .tab-btn .material-symbols-rounded {
+        font-size: 20px;
+    }
 }
 
-@media (max-width: 768px) {
-    .nav-tabs { gap: 4px; padding: 4px; border-radius: 40px; justify-content: space-around; }
-    .tab-btn { padding: 12px; gap: 0; min-width: 44px; min-height: 44px; border-radius: 50%; flex: 0 1 auto; }
-    .tab-btn span:not(.material-symbols-rounded) { display: none; }
-    .tab-btn .material-symbols-rounded { font-size: 24px; margin: 0; }
-    .theme-toggle { width: 36px; height: 36px; }
-    .theme-toggle .material-symbols-rounded { font-size: 18px; }
+/* TABLET (641px - 1023px) */
+@media (min-width: 641px) and (max-width: 1023px) {
+    .nav-tabs {
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 50px;
+        justify-content: center;
+        flex-wrap: wrap;
+        overflow-x: visible;
+    }
+    .tab-btn {
+        padding: 10px 18px;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+    .tab-btn .material-symbols-rounded {
+        font-size: 18px;
+    }
 }
 
-@media (max-width: 400px) {
-    .nav-tabs { gap: 2px; padding: 3px; border-radius: 30px; overflow-x: auto; justify-content: flex-start; flex-wrap: nowrap; }
-    .tab-btn { padding: 10px; min-width: 40px; min-height: 40px; border-radius: 50%; }
-    .tab-btn .material-symbols-rounded { font-size: 22px; }
-    .theme-toggle { width: 32px; height: 32px; }
-    .theme-toggle .material-symbols-rounded { font-size: 16px; }
+/* HP BESAR (481px - 640px) */
+@media (min-width: 481px) and (max-width: 640px) {
+    .nav-tabs {
+        gap: 6px;
+        padding: 6px;
+        border-radius: 45px;
+        justify-content: space-between;
+    }
+    .tab-btn {
+        padding: 10px 14px;
+        font-size: 0.8rem;
+        gap: 6px;
+    }
+    .tab-btn .material-symbols-rounded {
+        font-size: 18px;
+    }
 }
 
-@media (min-width: 1025px) {
-    .nav-tabs { gap: 10px; padding: 8px; flex-wrap: nowrap; }
-    .tab-btn { padding: 12px 20px; font-size: 0.9rem; flex: 0 1 auto; }
-    .tab-btn .material-symbols-rounded { font-size: 22px; }
+/* HP KECIL (320px - 480px) */
+@media (max-width: 480px) {
+    .nav-tabs {
+        gap: 4px;
+        padding: 5px;
+        border-radius: 35px;
+        overflow-x: auto;
+        justify-content: flex-start;
+    }
+    .tab-btn {
+        padding: 8px 12px;
+        font-size: 0.7rem;
+        gap: 4px;
+    }
+    .tab-btn .material-symbols-rounded {
+        font-size: 16px;
+    }
+}
+
+/* HP SANGAT KECIL (di bawah 360px) - hanya icon */
+@media (max-width: 380px) {
+    .tab-btn span:not(.material-symbols-rounded) {
+        display: none;
+    }
+    .tab-btn {
+        padding: 10px;
+        min-width: 44px;
+        min-height: 44px;
+        border-radius: 50%;
+        gap: 0;
+    }
+    .tab-btn .material-symbols-rounded {
+        font-size: 22px;
+        margin: 0;
+    }
+    .nav-tabs {
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 12px;
+    }
 }
 
 /* ============ CARDS ============ */
@@ -1357,6 +1547,7 @@ html.dark .theme-toggle:hover {
     display: flex;
     align-items: center;
     gap: 10px;
+    font-weight: 700;
 }
 
 .grid-2col {
@@ -1372,11 +1563,12 @@ textarea {
     border-radius: var(--radius-md);
     background: var(--bg);
     color: var(--text);
-    font-family: inherit;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     font-size: 0.95rem;
     resize: vertical;
     min-height: 150px;
     box-sizing: border-box;
+    font-weight: 500;
 }
 
 .slider-group { margin: 20px 0; }
@@ -1384,7 +1576,7 @@ textarea {
 .slider-group label {
     display: block;
     margin-bottom: 10px;
-    font-weight: 500;
+    font-weight: 600;
 }
 
 input[type="range"] {
@@ -1426,6 +1618,7 @@ input[type="range"]::-webkit-slider-thumb {
     cursor: pointer;
     font-size: 0.8rem;
     transition: all 0.2s;
+    font-weight: 600;
 }
 
 .tag.selected {
@@ -1456,9 +1649,9 @@ input[type="range"]::-webkit-slider-thumb {
     padding: 12px 24px;
     border: none;
     border-radius: 40px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    font-family: inherit;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -1485,6 +1678,7 @@ input[type="range"]::-webkit-slider-thumb {
     position: relative;
     padding-right: 60px;
     word-wrap: break-word;
+    font-weight: 500;
 }
 
 .delete-btn {
@@ -1504,6 +1698,7 @@ input[type="range"]::-webkit-slider-thumb {
     border-radius: var(--radius-md);
     border-left: 4px solid var(--primary);
     margin: 15px 0;
+    font-weight: 500;
 }
 
 .chart-container {
@@ -1527,7 +1722,8 @@ input[type="range"]::-webkit-slider-thumb {
 
 .summary-card .big {
     font-size: 1.5rem;
-    font-weight: bold;
+    font-weight: 800;
+    font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 .period-btns {
@@ -1542,6 +1738,8 @@ input[type="range"]::-webkit-slider-thumb {
     background: var(--bg);
     border-radius: 30px;
     cursor: pointer;
+    font-weight: 600;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 .period-btn.active {
@@ -1641,6 +1839,7 @@ input[type="range"]::-webkit-slider-thumb {
     margin-bottom: 4px;
     display: flex;
     align-items: center;
+    font-weight: 600;
 }
 
 .profile-field p {
@@ -1649,6 +1848,7 @@ input[type="range"]::-webkit-slider-thumb {
     border-radius: var(--radius-md);
     word-wrap: break-word;
     overflow-wrap: break-word;
+    font-weight: 500;
 }
 
 .edit-icon {
@@ -1670,6 +1870,7 @@ input[type="range"]::-webkit-slider-thumb {
     padding: 8px;
     z-index: 10000;
     display: none;
+    font-weight: 600;
 }
 
 .offline-banner.show { display: block; }
@@ -1719,11 +1920,12 @@ input[type="range"]::-webkit-slider-thumb {
     border-radius: 40px;
     border: none;
     cursor: pointer;
-    font-weight: 500;
+    font-weight: 700;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 4px;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 .modal-save { background: var(--primary); color: white; }
@@ -1738,6 +1940,7 @@ input[type="range"]::-webkit-slider-thumb {
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     cursor: pointer;
+    font-weight: 500;
 }
 
 .gender-option.selected {
@@ -1753,9 +1956,10 @@ footer {
     padding: 20px;
     font-size: 0.7rem;
     color: var(--text-tertiary);
+    font-weight: 500;
 }
 
-/* ============ RESPONSIVE ============ */
+/* ============ RESPONSIVE UMUM ============ */
 @media (max-width: 768px) {
     .grid-2col { grid-template-columns: 1fr; }
     .summary-grid { grid-template-columns: repeat(2, 1fr); }
